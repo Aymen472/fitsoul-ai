@@ -14,6 +14,14 @@ Full specs: `docs/01_PROJECT_OVERVIEW.md`, roadmap: `docs/02_DEVELOPMENT_ROADMAP
 - Frontend: Next.js, TypeScript, Tailwind, shadcn/ui.
 - Tooling: ruff, pytest, pre-commit, GitHub Actions, Docker.
 
+## Channel Strategy (see docs/04_ARCHITECTURE_DECISIONS.md — it overrides older WhatsApp-first wording)
+Main chat + dashboard + full history live in our Next.js PWA. WhatsApp is only for notifications (templates + deep links). Build the web app before WhatsApp.
+
+## Workflow Rules
+- One module at a time on a `feat/...` branch; Conventional Commits; push after each module.
+- After each module update `docs/PROGRESS.md`, commit and push, then stop and summarize for the developer before starting the next module.
+- If a push fails because of git login, tell the developer to push from their own terminal.
+
 ## Non-negotiable Rules
 1. Calories, macros, BMR/TDEE are ALWAYS computed by deterministic Python code and the food database — never invented by the LLM.
 2. Enforce calorie floors (female ≥ 1200, male ≥ 1500 kcal) and condition rules (PCOS, diabetes, hypertension).
