@@ -9,9 +9,10 @@
 - [x] Module 1.1: `UserProfile` Pydantic schema, bounds/cross-field validators, BMI & high-risk flags
 - [x] Module 1.2: Deterministic BMR / TDEE / calorie target & safe weekly loss calculator
 - [x] Module 1.3: Config-driven macro & medical condition rules engine (PCOS, Diabetes T2, Hypertension, Hypothyroid)
+- [x] Module 1.4: Curated Pakistani food CSV (165 items), fuzzy/alias search, rule-based filtering & USDA fallback client
 
 ## Next step
-Start Module 1.4 (Pakistani Food Database & Search) on branch `feat/food-database`.
+Start Module 1.5 (Supabase Database Setup & Migrations) on branch `feat/supabase-db-setup`.
 
 ## Log
 | Date | Module | What was built | Concepts learned |
@@ -22,3 +23,4 @@ Start Module 1.4 (Pakistani Food Database & Search) on branch `feat/food-databas
 | 2026-11-25 | Module 1.1 | `UserProfile` Pydantic v2 schema (`app/models/profile.py`) with enums, timezone/date/goal validators, BMI, high-risk & supplement safety flags, unit tests (`tests/test_profile.py`), `tzdata` dependency | Pydantic v2 `StrEnum`, `@field_validator`, `@model_validator(mode="after")`, `@computed_field`, `zoneinfo` + `tzdata`, parametrized `pytest` |
 | 2026-11-25 | Module 1.2 | Deterministic Mifflin-St Jeor BMR, TDEE, calorie floor (`1200`/`1500`), safe weekly loss & deadline assessor (`app/core/nutrition/calculator.py`), unit tests (`tests/test_calculator.py`) | Deterministic clinical calculations, hard safety floors, dependency-injectable `today` parameter for pure unit tests |
 | 2026-11-25 | Module 1.3 | YAML condition rules (`app/core/rules/condition_rules.yaml`), rules engine & `NutritionTargets` (`app/core/rules/engine.py`), unit tests (`tests/test_rules_engine.py`), `pyyaml` dependency | Config-driven domain rules (YAML + Pydantic validation), multi-condition strictest-bound merging, macro-to-gram conversion |
+| 2026-11-25 | Module 1.4 | Pakistani foods CSV (`data/foods/pakistani_foods.csv`), fuzzy search & rule filter (`app/core/nutrition/food_db.py`), USDA fallback client (`app/services/usda_client.py`), unit tests (`tests/test_food_db.py`) | Deterministic food scaling, multi-tier fuzzy/alias matching (`SequenceMatcher`), word-boundary allergy filtering, `httpx.MockTransport` HTTP testing |

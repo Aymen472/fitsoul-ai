@@ -1,0 +1,181 @@
+id,name,urdu_name,aliases,category,serving_desc,grams,kcal,protein,carbs,fat,fiber,sodium_mg,gi_category,tags
+roti_whole_wheat,Whole Wheat Roti,گندم کی روٹی,chapati|phulka|roti|atta roti,bread,1 medium roti (45g),45,120,3.8,23.5,1.2,3.2,110,low,veg|whole_foods|low_gi|high_fiber|gluten
+roti_tandoori,Tandoori Roti,تندوری روٹی,tandoori chapati|tandoor roti,bread,1 medium (60g),60,155,4.8,31.0,1.2,3.5,180,medium,veg|gluten
+roti_multigrain,Multigrain Roti,ملٹی گرین روٹی,mixed grain chapati,bread,1 medium (45g),45,118,4.2,21.0,1.8,4.5,105,low,veg|whole_foods|low_gi|high_fiber|gluten
+roti_besan,Besan Roti,بیسن کی روٹی,missi roti|gram flour roti,bread,1 medium (50g),50,140,6.2,20.0,3.5,4.8,140,low,veg|whole_foods|low_gi|high_fiber|high_protein
+roti_bajra,Bajra Roti,باجرے کی روٹی,pearl millet roti,bread,1 medium (50g),50,135,4.0,25.0,2.2,4.2,95,low,veg|whole_foods|low_gi|high_fiber
+roti_makki,Makki Roti,مکئی کی روٹی,cornmeal roti,bread,1 medium (55g),55,148,3.2,28.5,2.4,3.5,90,medium,veg|whole_foods|high_fiber
+plain_paratha,Plain Paratha,سادہ پراٹھا,paratha|tawa paratha,bread,1 medium (70g),70,260,5.2,34.0,11.5,3.0,240,medium,veg|fried|gluten
+aloo_paratha,Aloo Paratha,آلو پراٹھا,potato stuffed paratha,bread,1 medium (130g),130,330,7.0,48.0,12.2,4.5,390,high,veg|fried|high_gi|gluten
+gobhi_paratha,Gobhi Paratha,گوبھی پراٹھا,cauliflower paratha,bread,1 medium (120g),120,285,6.8,39.0,11.2,4.8,340,medium,veg|fried|gluten
+keema_paratha,Keema Paratha,قیمہ پراٹھا,minced meat paratha,bread,1 medium (140g),140,395,16.5,36.0,20.5,3.2,480,medium,non_veg|fried|high_protein|gluten
+plain_naan,Plain Naan,سادہ نان,naan|tandoori naan,bread,1 medium (90g),90,265,7.8,49.0,4.2,2.2,410,high,veg|high_gi|gluten
+garlic_naan,Garlic Naan,گارلک نان,butter garlic naan,bread,1 medium (95g),95,305,8.0,48.0,9.0,2.2,460,high,veg|dairy|high_gi|gluten
+roghni_naan,Roghni Naan,روغنی نان,sesame butter naan,bread,1 medium (110g),110,360,8.5,52.0,13.0,2.4,470,high,veg|dairy|high_gi|gluten
+kulcha,Kulcha,کلچہ,amritsari kulcha|plain kulcha,bread,1 medium (85g),85,250,7.0,45.0,4.5,2.0,420,high,veg|high_gi|gluten
+sheermaal,Sheermaal,شیرمال,sweet saffron flatbread,bread,1 piece (100g),100,340,7.2,52.0,11.5,1.8,290,high,veg|dairy|refined_sugar|high_gi|gluten
+brown_bread,Whole Wheat Bread Slice,براؤن بریڈ,brown bread|whole grain bread,bread,1 slice (30g),30,75,3.2,13.5,1.0,2.2,130,low,veg|low_gi|high_fiber|gluten
+white_bread,White Bread Slice,سفید بریڈ,double roti|sandwich bread,bread,1 slice (28g),28,74,2.2,14.2,0.9,0.7,145,high,veg|high_gi|ultra_processed|gluten
+bran_bread,Bran Bread Slice,چوکر والی بریڈ,high fiber bran bread,bread,1 slice (30g),30,70,3.4,12.0,0.9,3.5,125,low,veg|low_gi|high_fiber|gluten
+basmati_rice_boiled,Boiled Basmati Rice,ابلے باسمتی چاول,white chawal|steamed rice|plain rice,rice,1 cup cooked (150g),150,195,4.0,43.0,0.4,0.6,5,high,veg|whole_foods|high_gi
+brown_rice_boiled,Boiled Brown Rice,براؤن چاول,brown chawal|whole grain rice,rice,1 cup cooked (150g),150,175,3.9,36.5,1.4,2.8,8,low,veg|whole_foods|low_gi|high_fiber
+jeera_rice,Jeera Rice,زیرہ چاول,zeera chawal|cumin rice,rice,1 cup (160g),160,245,4.2,43.0,6.2,0.9,280,high,veg|high_gi
+chicken_biryani,Chicken Biryani,چکن بریانی,biryani|murgh biryani|pakistani biryani,rice,1 plate (300g),300,485,24.0,58.0,17.5,2.5,820,medium,non_veg|high_protein|high_sodium
+beef_biryani,Beef Biryani,بیف بریانی,deg biryani|gosht biryani,rice,1 plate (300g),300,535,23.0,57.0,24.0,2.4,860,medium,non_veg|high_protein|high_sodium
+mutton_biryani,Mutton Biryani,مٹن بریانی,lamb biryani|bakra biryani,rice,1 plate (300g),300,545,24.0,56.0,25.0,2.4,840,medium,non_veg|high_protein|high_sodium
+sindhi_biryani,Sindhi Biryani,سندھی بریانی,spicy chicken sindhi biryani,rice,1 plate (300g),300,505,23.0,59.0,19.5,2.8,880,medium,non_veg|high_protein|high_sodium
+chicken_pulao,Chicken Yakhni Pulao,چکن یخنی پلاؤ,yakhni pulao|murgh pulao,rice,1 plate (280g),280,430,22.0,52.0,14.5,1.8,690,medium,non_veg|high_protein
+mutton_pulao,Mutton Yakhni Pulao,مٹن پلاؤ,gosht pulao,rice,1 plate (280g),280,475,21.5,51.0,20.0,1.8,710,medium,non_veg|high_protein
+matar_pulao,Matar Pulao,مٹر پلاؤ,peas rice pilaf,rice,1 plate (250g),250,335,7.2,58.0,8.2,4.2,460,medium,veg|high_fiber
+chana_pulao,Chana Pulao,چنا پلاؤ,kabuli chana pulao,rice,1 plate (260g),260,365,10.5,61.0,8.8,6.5,510,low,veg|low_gi|high_fiber
+moong_khichdi,Moong Dal Khichdi,مونگ دال کھچڑی,khichdi|soft rice lentil,rice,1 bowl (220g),220,250,9.5,43.0,4.2,4.0,320,low,veg|whole_foods|low_gi|high_fiber
+tahari,Aloo Tahari,آلو تہاری,yellow potato rice,rice,1 plate (260g),260,360,6.5,64.0,8.5,3.6,520,high,veg|high_gi
+chicken_fried_rice,Chicken Fried Rice,چکن فرائیڈ رائس,chinese fried rice,rice,1 plate (260g),260,420,17.0,54.0,15.0,2.2,780,medium,non_veg|fried|high_sodium
+daal_moong,Daal Moong Cooked,مونگ کی دال,moong dal|yellow lentil curry,daal,1 bowl (200g),200,195,12.5,28.0,3.8,6.5,320,low,veg|whole_foods|low_gi|high_fiber|high_protein
+daal_masoor,Daal Masoor Cooked,مسور کی دال,red lentil curry|masoor dal,daal,1 bowl (200g),200,205,13.0,29.0,4.2,7.0,330,low,veg|whole_foods|low_gi|high_fiber|high_protein
+daal_chana,Daal Chana Cooked,چنے کی دال,chana dal|bengal gram curry,daal,1 bowl (200g),200,235,12.2,34.0,5.6,7.5,350,low,veg|whole_foods|low_gi|high_fiber|high_protein
+daal_mash,Daal Mash Tadka,ماش کی دال,urad dal|white lentil fry,daal,1 bowl (200g),200,265,12.0,31.0,10.2,6.2,390,low,veg|low_gi|high_fiber|high_protein
+daal_makhani,Daal Makhani,دال مکھنی,black lentil butter curry,daal,1 bowl (200g),200,315,11.5,29.0,17.0,6.8,560,low,veg|dairy|low_gi|high_fiber
+mix_daal,Mixed Daal Tadka,مکس دال,panchratan dal|mixed lentils,daal,1 bowl (200g),200,215,12.0,29.0,5.5,6.8,340,low,veg|whole_foods|low_gi|high_fiber|high_protein
+chana_masala,Chana Masala,چنا مصالحہ,cholay|white chickpea curry,daal,1 bowl (200g),200,245,10.5,36.0,6.8,8.5,480,low,veg|whole_foods|low_gi|high_fiber
+lahori_cholay,Lahori Chanay,لاہوری چنے,murgh cholay base|breakfast chana,daal,1 bowl (200g),200,295,11.0,34.0,13.0,8.0,620,low,veg|low_gi|high_fiber|high_sodium
+kala_chana_curry,Kala Chana Curry,کالے چنے کا سالن,black chickpea curry,daal,1 bowl (200g),200,225,11.8,33.0,5.2,9.2,360,low,veg|whole_foods|low_gi|high_fiber|high_protein
+rajma_lobia,Lobia / Rajma Masala,لوبیا مصالحہ,red kidney beans curry,daal,1 bowl (200g),200,230,11.5,34.0,5.4,8.8,380,low,veg|whole_foods|low_gi|high_fiber|high_protein
+boiled_chickpeas,Boiled White Chickpeas,ابلے سفید چنے,ublay chanay|safed chana,daal,1 cup (150g),150,245,13.2,40.5,3.8,11.2,15,low,veg|whole_foods|low_gi|high_fiber|high_protein
+boiled_black_chana,Boiled Black Chickpeas,ابلے کالے چنے,ublay kalay chanay,daal,1 cup (150g),150,220,12.5,36.0,3.2,12.0,18,low,veg|whole_foods|low_gi|high_fiber|high_protein
+chicken_haleem,Chicken Haleem,چکن حلیم,daleem|khichda,daal,1 bowl (250g),250,365,22.5,38.0,13.5,6.5,720,low,non_veg|low_gi|high_fiber|high_protein|high_sodium
+beef_haleem,Beef Haleem,بیف حلیم,shahi haleem,daal,1 bowl (250g),250,415,24.0,38.0,18.5,6.5,750,low,non_veg|low_gi|high_fiber|high_protein|high_sodium
+shami_kabab,Shami Kabab,شامی کباب,beef shami kabab|chicken shami kabab,daal,2 pieces (100g),100,245,16.5,14.0,13.5,3.0,420,low,non_veg|low_gi|high_protein|fried
+chana_chaat,Desi Chana Chaat,چنا چاٹ,aloo chana chaat,daal,1 bowl (180g),180,220,8.5,38.0,4.0,8.2,460,low,veg|whole_foods|low_gi|high_fiber
+bhindi_masala,Bhindi Masala,بھنڈی مصالحہ,bhindi sabzi|okra fry,sabzi,1 bowl (180g),180,175,3.8,16.5,10.5,5.8,310,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+palak_paneer,Palak Paneer,پالک پنیر,spinach cottage cheese,sabzi,1 bowl (200g),200,285,14.5,10.5,20.5,4.8,480,low,veg|dairy|low_gi|high_fiber|high_protein|potassium_rich
+aloo_palak,Aloo Palak,آلو پالک,spinach potato curry,sabzi,1 bowl (200g),200,190,4.8,22.0,9.2,4.5,350,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+aloo_gobhi,Aloo Gobhi,آلو گوبھی,potato cauliflower sabzi,sabzi,1 bowl (180g),180,195,4.5,24.5,8.8,4.6,340,medium,veg|whole_foods|high_fiber|potassium_rich
+aloo_matar,Aloo Matar,آلو مٹر,potato green peas curry,sabzi,1 bowl (200g),200,215,6.2,29.0,8.2,5.4,370,medium,veg|whole_foods|high_fiber
+baingan_bharta,Baingan Bharta,بینگن کا بھرتہ,roasted eggplant mash,sabzi,1 bowl (180g),180,165,3.2,14.5,10.5,6.2,290,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+karela_sabzi,Karela Pyaz Sabzi,کریلا پیاز,bitter gourd fry,sabzi,1 bowl (150g),150,155,3.5,13.0,9.8,5.5,280,low,veg|whole_foods|low_gi|high_fiber
+bharwa_karela,Bharwa Karela,بھرواں کریلا,stuffed bitter gourd,sabzi,1 bowl (160g),160,185,4.8,16.0,11.2,5.8,340,low,veg|low_gi|high_fiber
+tori_sabzi,Tori Ki Sabzi,توری کا سالن,ridge gourd curry,sabzi,1 bowl (180g),180,115,2.4,11.0,6.8,3.6,250,low,veg|whole_foods|low_gi|high_fiber
+tinda_masala,Tinda Masala,ٹینڈا مصالحہ,apple gourd curry,sabzi,1 bowl (180g),180,125,2.5,12.0,7.4,3.4,260,low,veg|whole_foods|low_gi|high_fiber
+lauki_sabzi,Lauki / Kaddu Sabzi,لوکی کدو کا سالن,bottle gourd curry,sabzi,1 bowl (180g),180,110,2.2,10.5,6.5,3.2,240,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+mix_sabzi,Mix Sabzi,مکس سبزی,mixed vegetable curry,sabzi,1 bowl (180g),180,175,4.2,20.0,8.8,5.2,320,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+sarson_ka_saag,Sarson Ka Saag,سرسوں کا ساگ,mustard greens curry,sabzi,1 bowl (200g),200,195,6.0,14.0,13.0,5.5,390,low,veg|dairy|whole_foods|low_gi|high_fiber|potassium_rich
+aloo_methi,Aloo Methi,آلو میتھی,fenugreek potato sabzi,sabzi,1 bowl (170g),170,185,4.5,22.0,8.8,4.8,320,low,veg|whole_foods|low_gi|high_fiber
+gajar_matar,Gajar Matar,گاجر مٹر,carrot peas sabzi,sabzi,1 bowl (170g),170,165,4.4,20.5,7.2,5.2,290,low,veg|whole_foods|low_gi|high_fiber
+arvi_masala,Arvi Masala,اروی مصالحہ,taro root curry,sabzi,1 bowl (170g),170,210,3.5,31.0,8.2,4.5,330,medium,veg|whole_foods|high_fiber
+shimla_mirch_aloo,Aloo Shimla Mirch,آلو شملہ مرچ,capsicum potato stir fry,sabzi,1 bowl (170g),170,170,3.5,21.0,8.2,4.0,300,medium,veg|whole_foods|high_fiber
+chicken_karahi,Chicken Karahi,چکن کڑاہی,murgh karahi,meat,1 bowl (220g),220,365,32.0,8.5,22.5,1.8,610,low,non_veg|low_gi|high_protein
+chicken_handi,Chicken Boneless Handi,چکن ہانڈی,creamy chicken handi,meat,1 bowl (220g),220,395,30.0,10.0,26.0,1.5,640,low,non_veg|dairy|low_gi|high_protein
+chicken_tikka,Chicken Tikka Piece,چکن تکہ,tandoori chicken leg|bbq tikka,meat,1 quarter piece (180g),180,290,35.0,4.0,14.5,0.5,540,low,non_veg|low_gi|high_protein
+chicken_malai_boti,Chicken Malai Boti,چکن ملائی بوٹی,creamy chicken boti,meat,6 pieces (150g),150,310,27.0,4.5,20.5,0.4,490,low,non_veg|dairy|low_gi|high_protein
+chicken_seekh_kabab,Chicken Seekh Kabab,چکن سیخ کباب,seekh kabab chicken,meat,2 skewers (120g),120,235,24.0,4.0,13.5,0.6,510,low,non_veg|low_gi|high_protein
+beef_seekh_kabab,Beef Seekh Kabab,بیف سیخ کباب,seekh kabab beef,meat,2 skewers (120g),120,295,22.0,4.0,21.0,0.6,540,low,non_veg|low_gi|high_protein
+chapli_kabab,Peshawari Chapli Kabab,چپلی کباب,beef chapli kabab,meat,1 large kabab (130g),130,335,23.0,7.5,23.5,1.0,590,low,non_veg|fried|low_gi|high_protein
+grilled_chicken_breast,Grilled Chicken Breast,گرلڈ چکن بریسٹ,plain chicken breast|boiled chicken,meat,150g cooked,150,245,45.0,0.0,5.5,0.0,140,low,non_veg|whole_foods|low_gi|high_protein
+chicken_qorma,Chicken Qorma,چکن قورمہ,murgh korma,meat,1 bowl (220g),220,390,27.0,10.0,27.0,1.5,620,low,non_veg|dairy|low_gi|high_protein
+chicken_nihari,Chicken Nihari,چکن نہاری,murgh nihari,meat,1 bowl (250g),250,355,28.0,15.0,20.0,1.2,780,low,non_veg|low_gi|high_protein|high_sodium
+beef_nihari,Beef Nihari,بیف نہاری,lahori nihari|nalli nihari,meat,1 bowl (250g),250,455,29.0,16.0,30.5,1.2,840,low,non_veg|low_gi|high_protein|high_sodium
+mutton_karahi,Mutton Karahi,مٹن کڑاہی,gosht karahi,meat,1 bowl (220g),220,435,28.5,8.0,32.0,1.6,630,low,non_veg|low_gi|high_protein
+mutton_qorma,Mutton Qorma,مٹن قورمہ,gosht korma,meat,1 bowl (220g),220,450,27.0,9.5,33.5,1.5,640,low,non_veg|dairy|low_gi|high_protein
+beef_keema,Beef Keema Masala,بیف قیمہ,bhuna keema|minced beef curry,meat,1 bowl (180g),180,350,26.0,6.5,24.5,1.4,490,low,non_veg|low_gi|high_protein
+aloo_keema,Aloo Keema,آلو قیمہ,minced meat potato curry,meat,1 bowl (200g),200,335,21.0,17.0,20.0,2.2,480,medium,non_veg|high_protein
+chicken_yakhni,Chicken Yakhni Soup,چکن یخنی,bone broth|desi chicken soup,meat,1 cup (240ml),240,85,10.5,2.0,3.5,0.2,410,low,non_veg|whole_foods|low_gi|high_protein
+grilled_rahu_fish,Grilled Rahu Fish,گرلڈ رہو مچھلی,tandoori fish|baked fish,meat,150g fillet,150,235,31.0,2.5,11.0,0.2,320,low,non_veg|whole_foods|low_gi|high_protein
+lahori_fried_fish,Lahori Fried Fish,لاہوری تلی ہوئی مچھلی,besan fried fish,meat,150g piece,150,330,27.0,12.0,19.5,1.2,590,low,non_veg|fried|low_gi|high_protein
+fish_curry,Desi Fish Curry,مچھلی کا سالن,machli masala,meat,1 bowl (200g),200,285,26.0,7.0,17.0,1.2,520,low,non_veg|low_gi|high_protein
+prawns_masala,Prawns Masala,جھینگا مصالحہ,shrimp curry|jhinga karahi,meat,1 bowl (180g),180,230,27.5,6.0,10.5,1.0,580,low,non_veg|low_gi|high_protein
+boiled_egg,Boiled Egg,ابلا ہوا انڈا,ubla anda|hard boiled egg,eggs_dairy,1 large egg (50g),50,78,6.3,0.6,5.3,0.0,62,low,eggetarian|egg|whole_foods|low_gi|high_protein
+egg_white,Boiled Egg White,انڈے کی سفیدی,anda safedi,eggs_dairy,2 egg whites (66g),66,34,7.2,0.5,0.1,0.0,110,low,eggetarian|egg|whole_foods|low_gi|high_protein
+fried_egg,Half Fry / Fried Egg,تلا ہوا انڈا,half fry anda|sunny side up,eggs_dairy,1 egg (55g),55,115,6.3,0.6,9.5,0.0,140,low,eggetarian|egg|fried|low_gi|high_protein
+desi_omelette,Desi Masala Omelette,دیسی آملیٹ,pyaz tamatar omelette,eggs_dairy,2 eggs (130g),130,220,13.5,4.2,16.5,0.8,310,low,eggetarian|egg|fried|low_gi|high_protein
+scrambled_eggs,Scrambled Eggs (Anda Bhurji),انڈا بھرجی,anda bhurji,eggs_dairy,2 eggs (130g),130,230,13.2,4.0,17.5,0.6,320,low,eggetarian|egg|low_gi|high_protein
+plain_dahi,Plain Yogurt (Dahi),سادہ دہی,dahi|homemade curd,eggs_dairy,1 cup (200g),200,122,7.0,9.4,6.4,0.0,92,low,veg|dairy|whole_foods|low_gi|potassium_rich
+greek_yogurt,Greek Yogurt Unsweetened,گریک یوگرٹ,strained dahi|hung curd,eggs_dairy,1 cup (170g),170,130,17.0,6.5,3.5,0.0,65,low,veg|dairy|whole_foods|low_gi|high_protein
+low_fat_milk,Low Fat Milk,کم چکنائی والا دودھ,skim milk|toned milk,eggs_dairy,1 cup (240ml),240,105,8.2,12.0,2.5,0.0,105,low,veg|dairy|whole_foods|low_gi|potassium_rich
+full_cream_milk,Full Cream Milk,خالص دودھ,khula doodh|whole milk,eggs_dairy,1 cup (240ml),240,150,7.8,11.5,8.0,0.0,100,low,veg|dairy|whole_foods|low_gi|potassium_rich
+paneer_fresh,Fresh Paneer / Cottage Cheese,تازہ پنیر,desi paneer|cottage cheese,eggs_dairy,100g,100,265,18.3,3.5,20.0,0.0,18,low,veg|dairy|whole_foods|low_gi|high_protein
+desi_ghee,Desi Ghee,دیسی گھی,clarified butter|asli ghee,eggs_dairy,1 tsp (5g),5,45,0.0,0.0,5.0,0.0,0,low,veg|dairy|low_gi
+butter,Salted Butter,مکھن,makhan,eggs_dairy,1 tbsp (14g),14,100,0.1,0.0,11.3,0.0,90,low,veg|dairy|low_gi
+cheddar_cheese,Cheddar Cheese Slice,چیڈر چیز,cheese slice,eggs_dairy,1 slice (22g),22,88,5.4,0.4,7.2,0.0,140,low,veg|dairy|low_gi|high_protein
+cucumber_raita,Kheera Raita,کھیرا رائتہ,cucumber yogurt raita,eggs_dairy,1 bowl (120g),120,75,4.2,6.2,3.6,0.6,190,low,veg|dairy|whole_foods|low_gi
+mint_raita,Podina Raita,پودینہ رائتہ,green chutney yogurt,eggs_dairy,1 bowl (100g),100,68,3.6,5.2,3.5,0.4,180,low,veg|dairy|whole_foods|low_gi
+boondi_raita,Boondi Raita,بوندی رائتہ,boondi yogurt,eggs_dairy,1 bowl (130g),130,135,4.8,14.5,6.2,0.8,260,medium,veg|dairy|fried
+wheat_daliya,Sweetened Milk Daliya,گندم کا دلیہ,broken wheat porridge,breakfast,1 bowl (220g),220,235,7.5,38.0,5.5,4.2,110,low,veg|dairy|whole_foods|low_gi|high_fiber
+savory_daliya,Namkeen Vegetable Daliya,نمکین سبزی دلیہ,namkeen daliya|bulgur porridge,breakfast,1 bowl (220g),220,195,6.8,33.0,3.8,5.5,310,low,veg|whole_foods|low_gi|high_fiber
+oats_porridge,Oats Porridge (Water/Milk),جئی کا دلیہ,oatmeal|rolled oats cooked,breakfast,1 bowl (220g),220,210,7.8,32.0,5.2,4.8,90,low,veg|dairy|whole_foods|low_gi|high_fiber
+halwa_puri,Halwa Puri Platter (2 Puri),حلوہ پوری,puri chana halwa,breakfast,1 plate (280g),280,760,13.5,96.0,35.5,6.5,820,high,veg|fried|refined_sugar|high_gi|high_sodium
+suji_halwa,Suji Ka Halwa,سوجی کا حلوہ,semolina sweet halwa,breakfast,1 small bowl (100g),100,320,4.5,44.0,14.0,1.2,45,high,veg|dairy|refined_sugar|high_gi
+besan_chilla,Besan Chilla (Gram Flour Crepe),بیسن کا چیلہ,besan cheela|savory pancake,breakfast,2 medium (120g),120,235,11.5,28.0,8.2,5.6,290,low,veg|whole_foods|low_gi|high_fiber|high_protein
+french_toast,Sweet French Toast,فرینچ ٹوسٹ,meetha toast|egg toast,breakfast,2 slices (130g),130,310,10.5,38.0,12.5,1.6,310,high,eggetarian|egg|dairy|fried|refined_sugar|high_gi|gluten
+shakshuka,Desi Shakshuka,دیسی شکشوکا,eggs in tomato masala,breakfast,1 pan (240g),240,260,14.5,11.0,17.5,2.5,440,low,eggetarian|egg|whole_foods|low_gi|high_protein
+chicken_paratha_roll,Chicken Paratha Roll,چکن پراٹھا رول,paratha roll|chicken roll,breakfast,1 roll (220g),220,510,24.0,45.0,26.0,3.0,790,high,non_veg|fried|high_gi|high_sodium|gluten
+bhune_chanay,Roasted Chickpeas,بھنے چنے,bhune chanay|roasted chana|kala chana roasted,snacks,1 small cup (40g),40,148,8.2,23.5,2.2,6.8,18,low,veg|whole_foods|low_gi|high_fiber|high_protein
+roasted_makhana,Roasted Makhana (Fox Nuts),بھنے مکھانے,phool makhana|lotus seeds,snacks,1 cup (30g),30,108,2.9,21.5,1.0,2.2,45,low,veg|whole_foods|low_gi
+almonds,Almonds (Badaam),بادام,badaam|raw almonds,snacks,15 almonds (18g),18,104,3.8,3.8,9.0,2.2,0,low,veg|whole_foods|low_gi|nuts
+walnuts,Walnuts (Akhrot),اخروٹ,akhrot,snacks,7 halves (15g),15,98,2.3,2.1,9.8,1.0,0,low,veg|whole_foods|low_gi|nuts
+peanuts_roasted,Roasted Peanuts (Mungphali),بھنی مونگ پھلی,mungphali|moongphali,snacks,1 small handful (28g),28,165,7.0,5.5,14.0,2.4,45,low,veg|whole_foods|low_gi|nuts|high_protein
+pistachios,Pistachios (Pista),پستہ,pista,snacks,25 kernels (18g),18,101,3.7,5.0,8.1,1.8,45,low,veg|whole_foods|low_gi|nuts
+cashews,Cashews (Kaju),کاجو,kaju,snacks,12 cashews (20g),20,111,3.6,6.0,8.8,0.7,2,low,veg|whole_foods|low_gi|nuts
+chia_seeds,Chia Seeds,تخم ملنگا / چیا سیڈز,tukhm malanga|chia,snacks,1 tbsp (12g),12,58,2.0,5.0,3.7,4.1,2,low,veg|whole_foods|low_gi|high_fiber
+flax_seeds,Flax Seeds (Alsi),السی کے بیج,alsi ke beej,snacks,1 tbsp (10g),10,53,1.8,2.9,4.2,2.7,3,low,veg|whole_foods|low_gi|high_fiber
+pumpkin_seeds,Pumpkin Seeds (Kaddu ke Beej),کدو کے بیج,pepitas|magaz,snacks,2 tbsp (20g),20,112,6.0,2.2,9.6,1.2,4,low,veg|whole_foods|low_gi|high_protein
+peanut_butter,Unsweetened Peanut Butter,پینٹ بٹر,natural peanut butter,snacks,1 tbsp (16g),16,95,4.0,3.2,8.0,1.2,5,low,veg|whole_foods|low_gi|nuts
+air_popped_popcorn,Air-Popped Popcorn,سادہ پاپ کارن,plain popcorn|makai phulla,snacks,2 cups (20g),20,78,2.5,15.5,0.9,3.0,35,medium,veg|whole_foods|high_fiber
+bhutta_roasted,Roasted Corn on the Cob,بھنا بھٹا,bhutta|challi,snacks,1 medium cob (120g),120,115,3.8,24.5,1.4,3.2,25,medium,veg|whole_foods|high_fiber|potassium_rich
+shakarkandi_boiled,Boiled Sweet Potato (Shakarkandi),ابلے شکر قندی,shakarkandi chaat plain,snacks,1 medium (150g),150,130,2.4,30.0,0.2,4.5,40,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+aloo_samosa,Aloo Samosa,آلو سموسہ,punjabi samosa|fried samosa,street_food,1 medium (80g),80,255,4.5,28.5,13.5,2.4,420,high,veg|fried|high_gi|gluten
+mixed_pakora,Mixed Vegetable Pakora,پکوڑے,besan pakora|aloo pakora,street_food,4 pieces (100g),100,285,6.8,26.0,17.0,3.2,460,high,veg|fried|high_gi
+dahi_bhalla,Dahi Bhalla / Dahi Baray,دہی بھلے,dahi baray,street_food,1 bowl (180g),180,260,8.0,33.0,10.5,2.5,510,medium,veg|dairy|fried|refined_sugar
+gol_gappay,Gol Gappay (Pani Puri),گول گپے,pani puri,street_food,6 pieces (150g),150,210,4.5,31.0,7.5,2.2,680,high,veg|fried|high_gi|high_sodium
+bun_kabab,Desi Bun Kabab,بن کباب,anda shami burger,street_food,1 burger (200g),200,455,19.0,48.0,20.5,3.5,790,high,non_veg|fried|high_gi|high_sodium|gluten
+chicken_shawarma,Chicken Shawarma,چکن شاورما,pita chicken wrap,street_food,1 wrap (220g),220,445,26.0,42.0,18.5,2.5,850,high,non_veg|high_gi|high_sodium|gluten
+zinger_burger,Crispy Zinger Burger,زنگر برگر,fried chicken burger,street_food,1 burger (230g),230,585,26.0,52.0,30.0,2.2,1020,high,non_veg|fried|high_gi|high_sodium|ultra_processed|gluten
+french_fries,French Fries,فرینچ فرائز,chips|aloo fries,street_food,1 medium pack (115g),115,355,4.0,46.0,17.0,3.8,310,high,veg|fried|high_gi|ultra_processed
+pepperoni_cheese_pizza,Cheese Pizza Slice,پیزا سلائس,cheese pizza,street_food,1 medium slice (110g),110,285,12.0,35.0,10.5,2.0,620,high,veg|dairy|high_gi|high_sodium|ultra_processed|gluten
+spring_roll,Vegetable Spring Roll,اسپرنگ رول,fried roll,street_food,2 small rolls (100g),100,250,4.5,29.0,12.5,2.2,450,high,veg|fried|high_gi|gluten
+potato_chips,Packaged Potato Chips,پوٹیٹو چپس,salted crisps|lays pack,street_food,1 small bag (30g),30,160,2.0,15.5,10.0,1.2,180,high,veg|fried|high_gi|processed_salty|ultra_processed
+nimco_mix,Desi Nimco / Sev Mix,نمکو,daal moth|mix nimco,street_food,1 small cup (35g),35,185,5.2,17.5,10.5,2.5,290,medium,veg|fried|processed_salty|ultra_processed
+tea_rusk,Cake Rusk / Bakery Rusk,رس / پاپے,papa|suji rusk,street_food,2 rusks (30g),30,125,2.8,21.5,3.2,0.8,115,high,veg|refined_sugar|high_gi|ultra_processed|gluten
+plain_biscuit,Sweet Tea Biscuit,میٹھا بسکٹ,marie biscuit|glucose biscuit,street_food,3 biscuits (24g),24,110,1.8,18.0,3.4,0.5,95,high,veg|refined_sugar|high_gi|ultra_processed|gluten
+apple,Apple (Saib),سیب,saib,fruit,1 medium (150g),150,78,0.4,20.5,0.3,3.6,2,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+banana,Banana (Kela),کیلا,kela,fruit,1 medium (118g),118,105,1.3,27.0,0.4,3.1,1,medium,veg|whole_foods|potassium_rich
+guava,Guava (Amrood),امرود,amrood,fruit,1 medium (130g),130,88,3.3,18.5,1.2,7.0,3,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+mango,Mango (Aam),آم,aam|chaunsa|sindhri mango,fruit,1 cup sliced (165g),165,99,1.4,24.8,0.6,2.6,2,medium,veg|whole_foods|potassium_rich
+orange_kinnow,Kinnow / Orange,کینو / مالٹا,malta|kinnow,fruit,1 medium (140g),140,66,1.3,16.5,0.2,3.4,0,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+papaya,Papaya (Papeeta),پپیتا,papeeta,fruit,1 cup cubes (145g),145,62,0.7,15.7,0.4,2.5,12,medium,veg|whole_foods|potassium_rich
+watermelon,Watermelon (Tarbooz),تربوز,tarbooz,fruit,1 cup diced (150g),150,46,0.9,11.5,0.2,0.6,2,high,veg|whole_foods|high_gi|potassium_rich
+pomegranate,Pomegranate Seeds (Anaar),انار,anaar,fruit,1/2 cup arils (87g),87,72,1.5,16.3,1.0,3.5,3,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+grapes,Grapes (Angoor),انگور,angoor,fruit,1 cup (150g),150,104,1.1,27.3,0.2,1.4,3,medium,veg|whole_foods|potassium_rich
+dates_khajoor,Dates (Khajoor),کھجور,khajoor|medjool dates,fruit,2 medium dates (40g),40,112,0.9,30.0,0.1,2.8,1,medium,veg|whole_foods|high_fiber|potassium_rich
+pear,Pear (Nashpati),ناشپاتی,nashpati,fruit,1 medium (165g),165,94,0.6,25.0,0.2,5.1,2,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+peach,Peach (Aaroo),آڑو,aaroo,fruit,1 medium (150g),150,59,1.4,14.3,0.4,2.2,0,low,veg|whole_foods|low_gi|potassium_rich
+strawberry,Strawberries,اسٹرابیری,fresh berries,fruit,1 cup (150g),150,48,1.0,11.5,0.4,3.0,2,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+jamun,Jamun (Black Plum),جامن,jambul fruit,fruit,1 cup (130g),130,78,0.9,19.5,0.3,2.5,18,low,veg|whole_foods|low_gi
+falsa,Falsa Berries,فالسہ,phalsa,fruit,1 cup (100g),100,72,1.3,15.5,0.5,3.2,8,low,veg|whole_foods|low_gi|high_fiber
+chikoo,Chikoo (Sapodilla),چیکو,sapota,fruit,1 medium (100g),100,83,0.4,20.0,1.1,5.3,12,medium,veg|whole_foods|high_fiber|potassium_rich
+kharbooza,Cantaloupe / Kharbooza,خربوزہ,muskmelon|garma,fruit,1 cup cubes (160g),160,54,1.3,13.0,0.3,1.4,26,medium,veg|whole_foods|potassium_rich
+doodh_patti_chai,Doodh Patti Chai (With Sugar),دودھ پتی چائے,sweet milk tea|karak chai,beverage,1 cup (180ml),180,125,3.2,16.5,4.8,0.0,45,high,veg|dairy|refined_sugar|high_gi|sugary_drink
+chai_sugar_free,Milk Chai (No Sugar),بغیر چینی کی چائے,sugar free chai|unsweetened milk tea,beverage,1 cup (180ml),180,68,2.8,4.2,4.2,0.0,42,low,veg|dairy|low_gi
+green_tea_kahwa,Green Tea / Peshawari Kahwa (Unsweetened),سبز چائے / قہوہ,sabz chai|kahwa,beverage,1 cup (240ml),240,2,0.0,0.4,0.0,0.0,2,low,veg|whole_foods|low_gi
+black_coffee,Black Coffee (Unsweetened),بلیک کافی,americano|plain coffee,beverage,1 cup (240ml),240,3,0.3,0.2,0.0,0.0,5,low,veg|whole_foods|low_gi
+sweet_lassi,Sweet Lassi (Meethi Lassi),میٹھی لسی,meethi lassi,beverage,1 glass (250ml),250,210,6.5,29.5,7.2,0.0,85,high,veg|dairy|refined_sugar|high_gi|sugary_drink
+namkeen_lassi,Namkeen Lassi (Salted),نمکین لسی,chaach|mattha,beverage,1 glass (250ml),250,95,4.2,6.2,5.5,0.0,380,low,veg|dairy|low_gi|high_sodium
+sattu_drink,Roasted Barley Sattu Drink (Unsweetened),ستو کا شربت,jau sattu|barley sattu,beverage,1 glass (250ml),250,115,3.8,22.0,1.0,3.2,25,low,veg|whole_foods|low_gi|high_fiber
+fresh_lime_shikanji,Fresh Lime Water (Sugar-Free),لیموں پانی,nimbu pani unsweetened,beverage,1 glass (250ml),250,10,0.2,2.5,0.0,0.2,8,low,veg|whole_foods|low_gi
+sugarcane_juice,Sugarcane Juice (Gannay ka Ras),گنے کا رس,ganne ka ras,beverage,1 glass (250ml),250,175,0.5,43.0,0.2,0.0,15,high,veg|high_gi|sugary_drink
+mango_milkshake,Mango Milkshake (Sweetened),آم کا ملک شیک,mango shake,beverage,1 glass (250ml),250,245,6.0,41.0,6.2,1.5,85,high,veg|dairy|refined_sugar|high_gi|sugary_drink
+cola_soda,Regular Cola Soda,کولا ڈرنک,soft drink|fizzy drink,beverage,1 can (330ml),330,139,0.0,35.0,0.0,0.0,35,high,veg|refined_sugar|high_gi|sugary_drink|ultra_processed
+gulab_jamun,Gulab Jamun,گلاب جامن,mithai gulab jamun,sweets,1 medium piece (45g),45,165,2.0,24.5,6.5,0.3,35,high,veg|dairy|fried|refined_sugar|high_gi
+jalebi,Jalebi,جلیبی,crispy jalebi,sweets,1 medium piece (40g),40,150,1.0,26.5,4.5,0.2,12,high,veg|fried|refined_sugar|high_gi
+rice_kheer,Rice Kheer,چاول کی کھیر,firni|phirni,sweets,1 small bowl (120g),120,215,5.0,32.0,7.2,0.3,68,high,veg|dairy|refined_sugar|high_gi
+gajar_ka_halwa,Gajar Ka Halwa,گاجر کا حلوہ,carrot halwa,sweets,1 small bowl (100g),100,265,4.2,32.0,13.5,1.8,75,high,veg|dairy|refined_sugar|high_gi
+milk_barfi,Khoya Barfi,کھویا برفی,plain barfi|mithai,sweets,1 piece (35g),35,145,3.2,16.5,7.2,0.1,42,high,veg|dairy|refined_sugar|high_gi
+rasmalai,Rasmalai,رس ملائی,malai dessert,sweets,1 piece with milk (80g),80,185,4.8,22.0,8.5,0.2,55,high,veg|dairy|refined_sugar|high_gi
+dark_chocolate_70,Dark Chocolate (70%+ Cocoa),ڈارک چاکلیٹ,dark chocolate,sweets,2 squares (20g),20,115,1.6,8.5,8.2,2.2,4,low,veg|low_gi
+kachumber_salad,Kachumber Salad,کچومر سلاد,cucumber tomato onion salad,salad_condiment,1 bowl (150g),150,42,1.6,8.5,0.3,2.5,25,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+green_salad,Fresh Green Salad,تازہ ہرا سلاد,mixed garden salad,salad_condiment,1 bowl (150g),150,35,1.8,6.5,0.3,3.2,30,low,veg|whole_foods|low_gi|high_fiber|potassium_rich
+mint_chutney,Podina Dhaniya Chutney,پودینہ دھنیا چٹنی,green chutney,salad_condiment,2 tbsp (30g),30,18,0.8,3.2,0.2,1.1,160,low,veg|whole_foods|low_gi
+imli_chutney,Imli Sweet Chutney,املی کی چٹنی,tamarind chutney,salad_condiment,2 tbsp (30g),30,62,0.3,15.0,0.1,0.8,140,high,veg|refined_sugar|high_gi
+mango_achaar,Desi Mango Achaar,آم کا اچار,mixed pickle|achaar,salad_condiment,1 tbsp (15g),15,48,0.3,2.2,4.2,0.6,690,low,veg|high_sodium|processed_salty
+olive_oil,Extra Virgin Olive Oil,زیتون کا تیل,zaitoon ka tail|olive oil,salad_condiment,1 tsp (5g),5,45,0.0,0.0,5.0,0.0,0,low,veg|whole_foods|low_gi
+mustard_oil,Mustard Oil (Sarson ka Tail),سرسوں کا تیل,sarson oil,salad_condiment,1 tsp (5g),5,45,0.0,0.0,5.0,0.0,0,low,veg|low_gi

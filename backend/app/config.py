@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     debug: bool = True
     log_level: str = "INFO"
+    usda_api_key: str = "DEMO_KEY"
 
     model_config = SettingsConfigDict(
         env_file=(str(ROOT_ENV_FILE), ".env"),
