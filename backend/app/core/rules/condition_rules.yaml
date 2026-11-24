@@ -1,0 +1,49 @@
+default:
+  protein_pct: 0.25
+  carbs_pct: 0.45
+  fat_pct: 0.30
+  fiber_g_min: 25
+  sodium_mg_max: 2300
+
+conditions:
+  pcos:
+    carbs_max_pct: 0.30
+    protein_min_pct: 0.30
+    fiber_g_min: 30
+    forbidden_tags:
+      - refined_sugar
+      - high_gi
+    required_tags:
+      - low_gi
+      - high_fiber
+
+  diabetes_t2:
+    carbs_max_pct: 0.35
+    protein_min_pct: 0.25
+    max_carbs_g: 130
+    max_carbs_per_meal_g: 45
+    fiber_g_min: 30
+    forbidden_tags:
+      - refined_sugar
+      - high_gi
+      - sugary_drink
+    required_tags:
+      - low_gi
+      - high_fiber
+
+  hypertension:
+    sodium_mg_max: 1500
+    fiber_g_min: 28
+    forbidden_tags:
+      - high_sodium
+      - processed_salty
+    required_tags:
+      - potassium_rich
+
+  hypothyroid:
+    protein_min_pct: 0.28
+    fiber_g_min: 28
+    forbidden_tags:
+      - ultra_processed
+    required_tags:
+      - whole_foods

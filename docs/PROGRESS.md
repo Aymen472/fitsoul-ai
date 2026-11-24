@@ -8,9 +8,10 @@
 - [x] Module 0.2: GitHub Actions CI (`ruff` + `pytest`)
 - [x] Module 1.1: `UserProfile` Pydantic schema, bounds/cross-field validators, BMI & high-risk flags
 - [x] Module 1.2: Deterministic BMR / TDEE / calorie target & safe weekly loss calculator
+- [x] Module 1.3: Config-driven macro & medical condition rules engine (PCOS, Diabetes T2, Hypertension, Hypothyroid)
 
 ## Next step
-Start Module 1.3 (Macro & Condition Rules Engine) on branch `feat/macro-condition-rules`.
+Start Module 1.4 (Pakistani Food Database & Search) on branch `feat/food-database`.
 
 ## Log
 | Date | Module | What was built | Concepts learned |
@@ -20,3 +21,4 @@ Start Module 1.3 (Macro & Condition Rules Engine) on branch `feat/macro-conditio
 | 2026-11-25 | Module 0.2 | GitHub Actions CI workflow (`.github/workflows/ci.yml`) + CI badge in `README.md` | Continuous Integration, `uv sync --frozen`, dependency caching in GitHub Actions |
 | 2026-11-25 | Module 1.1 | `UserProfile` Pydantic v2 schema (`app/models/profile.py`) with enums, timezone/date/goal validators, BMI, high-risk & supplement safety flags, unit tests (`tests/test_profile.py`), `tzdata` dependency | Pydantic v2 `StrEnum`, `@field_validator`, `@model_validator(mode="after")`, `@computed_field`, `zoneinfo` + `tzdata`, parametrized `pytest` |
 | 2026-11-25 | Module 1.2 | Deterministic Mifflin-St Jeor BMR, TDEE, calorie floor (`1200`/`1500`), safe weekly loss & deadline assessor (`app/core/nutrition/calculator.py`), unit tests (`tests/test_calculator.py`) | Deterministic clinical calculations, hard safety floors, dependency-injectable `today` parameter for pure unit tests |
+| 2026-11-25 | Module 1.3 | YAML condition rules (`app/core/rules/condition_rules.yaml`), rules engine & `NutritionTargets` (`app/core/rules/engine.py`), unit tests (`tests/test_rules_engine.py`), `pyyaml` dependency | Config-driven domain rules (YAML + Pydantic validation), multi-condition strictest-bound merging, macro-to-gram conversion |
