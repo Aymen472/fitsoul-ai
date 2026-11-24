@@ -1,5 +1,7 @@
 # FitSoul AI
 
+[![CI](https://github.com/Aymen472/fitsoul-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Aymen472/fitsoul-ai/actions/workflows/ci.yml)
+
 **Your 24/7 AI Nutritionist, Fitness Coach, and Emotional Support Companion** — built for Pakistani and South Asian lifestyles (PCOS, Type-2 diabetes, weight loss, brides/grooms, and busy professionals).
 
 ## Architecture (Hybrid Channel Strategy)
@@ -66,7 +68,7 @@ uv run --project backend pre-commit install
 ## Roadmap
 
 - [x] Planning & architecture docs (`docs/01`–`04`)
-- [ ] **Phase 0:** Repo setup, FastAPI `/health`, ruff, pytest, pre-commit, CI
+- [x] **Phase 0:** Repo setup, FastAPI `/health`, ruff, pytest, pre-commit, CI
 - [ ] **Phase 1:** Deterministic nutrition engine, Pakistani food DB, user profile, Supabase schema
 - [ ] **Phase 2:** AI brain (meal planner + validator, photo scanner, safety guardrails, coach persona)
 - [ ] **Phase 3:** Next.js PWA (auth, chat with history, dashboard, workout & face yoga player)
