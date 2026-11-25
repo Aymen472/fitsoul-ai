@@ -10,6 +10,13 @@ from app.ai.client import (
     GeminiResponseFormatError,
     estimate_cost_usd,
 )
+from app.ai.meal_planner import (
+    AIMealPlanner,
+    GroceryItem,
+    WeeklyMealPlan,
+    build_fallback_meal_plan,
+    build_grocery_list,
+)
 from app.ai.tracing import (
     AITraceEvent,
     AIUsage,
@@ -20,6 +27,7 @@ from app.ai.tracing import (
 )
 
 __all__ = [
+    "AIMealPlanner",
     "AITextResponse",
     "AITraceEvent",
     "AIUsage",
@@ -29,9 +37,13 @@ __all__ = [
     "GeminiClient",
     "GeminiClientError",
     "GeminiResponseFormatError",
+    "GroceryItem",
     "LangfuseTraceSink",
     "TraceSink",
+    "WeeklyMealPlan",
     "build_default_trace_sink",
+    "build_fallback_meal_plan",
+    "build_grocery_list",
     "estimate_cost_usd",
     "log_trace_event",
 ]
