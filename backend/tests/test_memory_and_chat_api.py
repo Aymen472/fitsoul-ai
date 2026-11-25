@@ -459,6 +459,11 @@ def test_chat_endpoint_persists_history_extracts_and_recalls_memories(
     assert len(messages) == 4
     assert [m["role"] for m in messages] == ["user", "assistant", "user", "assistant"]
 
+    memories_resp = client.get("/api/v1/chat/aymen-chat/memories")
+    assert memories_resp.status_code == 200
+    memories = memories_resp.json()["memories"]
+    assert len(memories) == 2
+
 
 def test_chat_endpoint_crisis_prompt_flags_safety_and_skips_memory_extraction(
     api_harness: tuple[TestClient, sessionmaker[Session], list[str]],
@@ -592,5 +597,6 @@ def test_chat_and_meal_plan_endpoints_return_404_for_unknown_user(
         == 404
     )
     assert client.get("/api/v1/chat/missing-user/history").status_code == 404
+    assert client.get("/api/v1/chat/missing-user/memories").status_code == 404
     assert client.get("/api/v1/chat/missing-user/patterns").status_code == 404
     assert client.post("/api/v1/meal-plans/missing-user/daily").status_code == 404

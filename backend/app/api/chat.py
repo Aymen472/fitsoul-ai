@@ -80,6 +80,13 @@ class ChatHistoryResponse(BaseModel):
     messages: list[MessageRecord]
 
 
+class ChatMemoriesResponse(BaseModel):
+    """Persisted long-term semantic memories for a user."""
+
+    user_id: str
+    memories: list[UserMemoryRecord]
+
+
 @router.post("/chat", response_model=ChatResponse)
 def post_chat_message(
     payload: ChatRequest,
@@ -177,6 +184,17 @@ def get_chat_history(
 
     messages = MessageRepository.get_recent_messages(db, user_id, limit=limit)
     return ChatHistoryResponse(user_id=user_id, messages=messages)
+
+
+@router.get("/chat/{user_id}/memories", response_model=ChatMemoriesResponse)
+def get_user_memories(user_id: str, db: DbSession) -> ChatMemoriesResponse:
+    """Return all persisted long-term memories for a user (newest first)."""
+    record = ProfileRepository.get_profile(db, user_id)
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+
+    memories = MemoryRepository.list_memories(db, user_id)
+    return ChatMemoriesResponse(user_id=user_id, memories=memories)
 
 
 @router.get("/chat/{user_id}/patterns", response_model=PatternReport)

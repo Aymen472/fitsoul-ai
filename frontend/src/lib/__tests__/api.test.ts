@@ -4,7 +4,11 @@ import {
   ApiError,
   checkHealth,
   createOrUpsertProfile,
+  getChatHistory,
   getProfile,
+  getUserMemories,
+  getUserPatterns,
+  sendChatMessage,
   type ProfileUpsertRequest,
 } from "@/lib/api";
 import { deriveLocalUserId, isSupabaseConfigured } from "@/lib/auth";
@@ -161,5 +165,65 @@ describe("typed FastAPI client", () => {
         },
       }),
     ).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it("calls chat, history, memories, and patterns endpoints cleanly", async () => {
+    const mockChatRes = {
+      user_id: "u1",
+      reply: "Meal note ho gaya!",
+      intent: "meal_log",
+      flagged_safety: false,
+      safety_category: "safe",
+      stop_diet_advice: false,
+      grounded_data: { logged_kcal: 435 },
+      used_fallback: false,
+      saved_memories: [],
+      used_memories: [],
+      user_message_id: "um-1",
+      assistant_message_id: "am-1",
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(mockChatRes), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ user_id: "u1", messages: [] }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ user_id: "u1", memories: [] }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ patterns: [], nudges: [], summary: "OK" }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const chat = await sendChatMessage({ user_id: "u1", message: "2 roti" });
+    const history = await getChatHistory("u1", 50);
+    const memories = await getUserMemories("u1");
+    const patterns = await getUserPatterns("u1", 14);
+
+    expect(chat.reply).toBe("Meal note ho gaya!");
+    expect(history.messages).toEqual([]);
+    expect(memories.memories).toEqual([]);
+    expect(patterns.summary).toBe("OK");
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://127.0.0.1:8000/api/v1/chat",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://127.0.0.1:8000/api/v1/chat/u1/history?limit=50",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "http://127.0.0.1:8000/api/v1/chat/u1/memories",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "http://127.0.0.1:8000/api/v1/chat/u1/patterns?days=14",
+      expect.objectContaining({ method: "GET" }),
+    );
   });
 });

@@ -128,6 +128,11 @@ export interface ChatHistoryResponse {
   messages: ChatMessageRecord[];
 }
 
+export interface ChatMemoriesResponse {
+  user_id: string;
+  memories: UserMemoryRecord[];
+}
+
 export interface EmotionalPattern {
   pattern_type: string;
   severity: "positive" | "low" | "medium" | "high";
@@ -302,6 +307,13 @@ export async function getChatHistory(
 ): Promise<ChatHistoryResponse> {
   return requestJson<ChatHistoryResponse>(
     `/api/v1/chat/${encodeURIComponent(userId)}/history?limit=${limit}`,
+    { method: "GET" },
+  );
+}
+
+export async function getUserMemories(userId: string): Promise<ChatMemoriesResponse> {
+  return requestJson<ChatMemoriesResponse>(
+    `/api/v1/chat/${encodeURIComponent(userId)}/memories`,
     { method: "GET" },
   );
 }
