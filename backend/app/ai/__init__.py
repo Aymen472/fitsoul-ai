@@ -10,6 +10,8 @@ from app.ai.client import (
     GeminiResponseFormatError,
     estimate_cost_usd,
 )
+from app.ai.coach import ChatTurn, CoachAgent, CoachReply
+from app.ai.intent_router import CoachIntent, classify_intent, parse_text_meal_items
 from app.ai.meal_planner import (
     AIMealPlanner,
     GroceryItem,
@@ -41,6 +43,10 @@ __all__ = [
     "AITextResponse",
     "AITraceEvent",
     "AIUsage",
+    "ChatTurn",
+    "CoachAgent",
+    "CoachIntent",
+    "CoachReply",
     "DEFAULT_FLASH_MODEL",
     "DEFAULT_PRO_MODEL",
     "DetectedFoodItem",
@@ -62,6 +68,8 @@ __all__ = [
     "build_default_trace_sink",
     "build_fallback_meal_plan",
     "build_grocery_list",
+    "classify_intent",
     "estimate_cost_usd",
     "log_trace_event",
+    "parse_text_meal_items",
 ]
