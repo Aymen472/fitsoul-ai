@@ -193,6 +193,89 @@ export interface ValidatedMealPlan {
   attempts_used: number;
 }
 
+export interface FoodSearchItem {
+  id: string;
+  name: string;
+  urdu_name: string;
+  category: string;
+  serving_desc: string;
+  grams: number;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sodium_mg: number;
+  gi_category: string;
+}
+
+export interface MealEditItemInput {
+  food_id: string;
+  servings: number;
+}
+
+export interface QuickMealLogRequest {
+  meal_type: "breakfast" | "lunch" | "snack" | "dinner";
+  items: MealEditItemInput[];
+  plate_notes?: string;
+}
+
+export interface MealLogRecord {
+  id: string;
+  user_id: string;
+  meal_type: string;
+  items: Record<string, unknown>[];
+  total_kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  photo_url: string | null;
+  logged_at: string;
+}
+
+export interface WaterLogRecord {
+  id: string;
+  user_id: string;
+  amount_ml: number;
+  logged_at: string;
+}
+
+export interface WeightLogRecord {
+  id: string;
+  user_id: string;
+  weight_kg: number;
+  logged_at: string;
+}
+
+export interface MoodLogRecord {
+  id: string;
+  user_id: string;
+  mood: string;
+  note: string | null;
+  logged_at: string;
+}
+
+export interface DashboardSummary {
+  user_id: string;
+  date: string;
+  targets: NutritionTargets;
+  consumed_kcal: number;
+  remaining_kcal: number;
+  consumed_protein_g: number;
+  consumed_carbs_g: number;
+  consumed_fat_g: number;
+  water_ml: number;
+  water_target_ml: number;
+  streak_days: number;
+  latest_weight_kg: number;
+  target_weight_kg: number | null;
+  weight_history: WeightLogRecord[];
+  today_meals: MealLogRecord[];
+  recent_meals: MealLogRecord[];
+  recent_moods: MoodLogRecord[];
+  patterns: PatternReport;
+}
+
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"
 ).replace(/\/+$/, "");
@@ -335,5 +418,66 @@ export async function generateDailyMealPlan(
   return requestJson<ValidatedMealPlan>(
     `/api/v1/meal-plans/${encodeURIComponent(userId)}/daily?day_index=${dayIndex}`,
     { method: "POST" },
+  );
+}
+
+export async function searchFoods(query = "", limit = 12): Promise<FoodSearchItem[]> {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  return requestJson<FoodSearchItem[]>(`/api/v1/foods/search?${params.toString()}`, {
+    method: "GET",
+  });
+}
+
+export async function getDashboard(userId: string): Promise<DashboardSummary> {
+  return requestJson<DashboardSummary>(
+    `/api/v1/tracking/${encodeURIComponent(userId)}/dashboard`,
+    { method: "GET" },
+  );
+}
+
+export async function logQuickMeal(
+  userId: string,
+  payload: QuickMealLogRequest,
+): Promise<MealLogRecord> {
+  return requestJson<MealLogRecord>(
+    `/api/v1/tracking/${encodeURIComponent(userId)}/meals`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function logWater(userId: string, amountMl: number): Promise<WaterLogRecord> {
+  return requestJson<WaterLogRecord>(
+    `/api/v1/tracking/${encodeURIComponent(userId)}/water`,
+    {
+      method: "POST",
+      body: JSON.stringify({ amount_ml: amountMl }),
+    },
+  );
+}
+
+export async function logWeight(userId: string, weightKg: number): Promise<WeightLogRecord> {
+  return requestJson<WeightLogRecord>(
+    `/api/v1/tracking/${encodeURIComponent(userId)}/weight`,
+    {
+      method: "POST",
+      body: JSON.stringify({ weight_kg: weightKg }),
+    },
+  );
+}
+
+export async function logMood(
+  userId: string,
+  mood: string,
+  note?: string,
+): Promise<MoodLogRecord> {
+  return requestJson<MoodLogRecord>(
+    `/api/v1/tracking/${encodeURIComponent(userId)}/mood`,
+    {
+      method: "POST",
+      body: JSON.stringify({ mood, note: note?.trim() ? note.trim() : null }),
+    },
   );
 }

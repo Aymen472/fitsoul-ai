@@ -12,6 +12,7 @@ from app.db.database import (
 )
 from app.db.repository import (
     DailyMealSummary,
+    DailyWaterSummary,
     MealLogRecord,
     MealLogRepository,
     MemoryRepository,
@@ -22,6 +23,10 @@ from app.db.repository import (
     ProfileRecord,
     ProfileRepository,
     UserMemoryRecord,
+    WaterLogRecord,
+    WaterLogRepository,
+    WeightLogRecord,
+    WeightLogRepository,
 )
 from app.db.tables import (
     FoodRow,
@@ -42,6 +47,7 @@ __all__ = [
     "Base",
     "DEFAULT_SQLITE_URL",
     "DailyMealSummary",
+    "DailyWaterSummary",
     "FoodRow",
     "MealLogRecord",
     "MealLogRepository",
@@ -61,7 +67,11 @@ __all__ = [
     "UserMemoryRecord",
     "UserMemoryRow",
     "UserRow",
+    "WaterLogRecord",
+    "WaterLogRepository",
     "WaterLogRow",
+    "WeightLogRecord",
+    "WeightLogRepository",
     "WeightLogRow",
     "WorkoutRow",
     "create_db_engine",

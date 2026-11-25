@@ -19,6 +19,8 @@ from app.db.tables import (
     ProfileRow,
     UserMemoryRow,
     UserRow,
+    WaterLogRow,
+    WeightLogRow,
 )
 from app.models import (
     ActivityLevel,
@@ -572,3 +574,149 @@ class MoodLogRepository:
         )
         rows = session.scalars(stmt).all()
         return [_to_mood_log_record(row) for row in rows if _ensure_utc(row.logged_at) >= cutoff]
+
+
+class WaterLogRecord(BaseModel):
+    """Persisted hydration intake record in milliliters."""
+
+    id: str
+    user_id: str
+    amount_ml: int
+    logged_at: datetime
+
+
+class DailyWaterSummary(BaseModel):
+    """Aggregated hydration logs and total milliliters for a single date."""
+
+    date: date
+    logs: list[WaterLogRecord]
+    total_ml: int
+
+
+def _to_water_log_record(row: WaterLogRow) -> WaterLogRecord:
+    return WaterLogRecord(
+        id=row.id,
+        user_id=row.user_id,
+        amount_ml=row.amount_ml,
+        logged_at=_ensure_utc(row.logged_at),
+    )
+
+
+class WaterLogRepository:
+    """Data-access operations for user hydration logs."""
+
+    @staticmethod
+    def save_water_log(
+        session: Session,
+        user_id: str,
+        amount_ml: int,
+        *,
+        logged_at: datetime | None = None,
+    ) -> WaterLogRecord:
+        """Persist a hydration intake entry to the water_logs table."""
+        if amount_ml <= 0:
+            raise ValueError("amount_ml must be positive")
+
+        timestamp = _ensure_utc(logged_at) if logged_at is not None else datetime.now(UTC)
+        row = WaterLogRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            amount_ml=amount_ml,
+            logged_at=timestamp,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_water_log_record(row)
+
+    @staticmethod
+    def get_recent_water_logs(
+        session: Session,
+        user_id: str,
+        *,
+        days: int = 30,
+        now: datetime | None = None,
+    ) -> list[WaterLogRecord]:
+        """Fetch water logs within the last N days ordered chronologically."""
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+        cutoff = reference - timedelta(days=days)
+
+        stmt = (
+            select(WaterLogRow)
+            .where(WaterLogRow.user_id == user_id)
+            .order_by(WaterLogRow.logged_at.asc(), WaterLogRow.id.asc())
+        )
+        rows = session.scalars(stmt).all()
+        return [_to_water_log_record(row) for row in rows if _ensure_utc(row.logged_at) >= cutoff]
+
+
+class WeightLogRecord(BaseModel):
+    """Persisted body-weight check-in record in kilograms."""
+
+    id: str
+    user_id: str
+    weight_kg: float
+    logged_at: datetime
+
+
+def _to_weight_log_record(row: WeightLogRow) -> WeightLogRecord:
+    return WeightLogRecord(
+        id=row.id,
+        user_id=row.user_id,
+        weight_kg=row.weight_kg,
+        logged_at=_ensure_utc(row.logged_at),
+    )
+
+
+class WeightLogRepository:
+    """Data-access operations for body-weight check-ins."""
+
+    @staticmethod
+    def save_weight_log(
+        session: Session,
+        user_id: str,
+        weight_kg: float,
+        *,
+        logged_at: datetime | None = None,
+    ) -> WeightLogRecord:
+        """Persist a body-weight check-in to the weight_logs table."""
+        if not (30.0 <= weight_kg <= 250.0):
+            raise ValueError("weight_kg must be between 30.0 and 250.0")
+
+        timestamp = _ensure_utc(logged_at) if logged_at is not None else datetime.now(UTC)
+        row = WeightLogRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            weight_kg=round(float(weight_kg), 1),
+            logged_at=timestamp,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_weight_log_record(row)
+
+    @staticmethod
+    def get_recent_weight_logs(
+        session: Session,
+        user_id: str,
+        *,
+        days: int = 90,
+        limit: int = 60,
+        now: datetime | None = None,
+    ) -> list[WeightLogRecord]:
+        """Fetch recent weight check-ins ordered chronologically (up to `limit` latest)."""
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+        cutoff = reference - timedelta(days=days)
+
+        stmt = (
+            select(WeightLogRow)
+            .where(WeightLogRow.user_id == user_id)
+            .order_by(WeightLogRow.logged_at.asc(), WeightLogRow.id.asc())
+        )
+        rows = session.scalars(stmt).all()
+        filtered = [
+            _to_weight_log_record(row) for row in rows if _ensure_utc(row.logged_at) >= cutoff
+        ]
+        if limit > 0 and len(filtered) > limit:
+            return filtered[-limit:]
+        return filtered

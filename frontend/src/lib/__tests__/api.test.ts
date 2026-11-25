@@ -5,9 +5,15 @@ import {
   checkHealth,
   createOrUpsertProfile,
   getChatHistory,
+  getDashboard,
   getProfile,
   getUserMemories,
   getUserPatterns,
+  logMood,
+  logQuickMeal,
+  logWater,
+  logWeight,
+  searchFoods,
   sendChatMessage,
   type ProfileUpsertRequest,
 } from "@/lib/api";
@@ -223,6 +229,57 @@ describe("typed FastAPI client", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
       "http://127.0.0.1:8000/api/v1/chat/u1/patterns?days=14",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("calls food search, tracking mutations, and dashboard endpoint", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "meal-1", total_kcal: 435 }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "w-1", amount_ml: 250 }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "wt-1", weight_kg: 74.2 }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "m-1", mood: "happy" }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ user_id: "u1", consumed_kcal: 435 }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await searchFoods("daal", 8);
+    await logQuickMeal("u1", { meal_type: "lunch", items: [{ food_id: "daal_moong", servings: 1 }] });
+    await logWater("u1", 250);
+    await logWeight("u1", 74.2);
+    await logMood("u1", "happy", "Good energy");
+    const dash = await getDashboard("u1");
+
+    expect(dash.consumed_kcal).toBe(435);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://127.0.0.1:8000/api/v1/foods/search?q=daal&limit=8",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://127.0.0.1:8000/api/v1/tracking/u1/meals",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "http://127.0.0.1:8000/api/v1/tracking/u1/water",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "http://127.0.0.1:8000/api/v1/tracking/u1/weight",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      5,
+      "http://127.0.0.1:8000/api/v1/tracking/u1/mood",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      6,
+      "http://127.0.0.1:8000/api/v1/tracking/u1/dashboard",
       expect.objectContaining({ method: "GET" }),
     );
   });
