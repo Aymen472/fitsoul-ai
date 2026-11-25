@@ -1,13 +1,16 @@
-"""Repository layer for user profiles, deterministic nutrition targets, and food seeding."""
+"""Repository layer for user profiles, meal logs, nutrition targets, and food seeding."""
 
-from datetime import date
+from datetime import UTC, date, datetime, time, timedelta
+from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.nutrition import FoodItem
 from app.core.rules import NutritionTargets, get_nutrition_targets
-from app.db.tables import FoodRow, NutritionTargetRow, ProfileRow, UserRow
+from app.db.tables import FoodRow, MealLogRow, NutritionTargetRow, ProfileRow, UserRow
 from app.models import (
     ActivityLevel,
     DietType,
@@ -17,6 +20,9 @@ from app.models import (
     MedicalCondition,
     UserProfile,
 )
+
+if TYPE_CHECKING:
+    from app.ai.photo_scanner import PhotoScanSummary
 
 
 class ProfileRecord(BaseModel):
@@ -188,3 +194,120 @@ class ProfileRepository:
             )
         session.commit()
         return len(foods)
+
+
+class MealLogRecord(BaseModel):
+    """Persisted meal log entry with serialized food items and totals."""
+
+    id: str
+    user_id: str
+    meal_type: str
+    items: list[dict[str, Any]]
+    total_kcal: float
+    protein_g: float
+    carbs_g: float
+    fat_g: float
+    photo_url: str | None = None
+    logged_at: datetime
+
+
+class DailyMealSummary(BaseModel):
+    """Aggregated meal logs and nutrition totals for a single UTC date."""
+
+    date: date
+    logs: list[MealLogRecord]
+    total_kcal: float
+    total_protein_g: float
+    total_carbs_g: float
+    total_fat_g: float
+
+
+class MealLogRepository:
+    """Data-access operations for logging scanned/confirmed meals and daily summaries."""
+
+    @staticmethod
+    def save_meal_log(
+        session: Session,
+        user_id: str,
+        meal_type: str,
+        summary: "PhotoScanSummary",
+        *,
+        photo_url: str | None = None,
+        logged_at: datetime | None = None,
+    ) -> MealLogRecord:
+        """Persist a confirmed or scanned meal summary to the meal_logs table."""
+        timestamp = logged_at if logged_at is not None else datetime.now(UTC)
+        serialized_items = [item.model_dump(mode="json") for item in summary.items]
+        row = MealLogRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            meal_type=meal_type,
+            items=serialized_items,
+            total_kcal=summary.total_kcal,
+            protein_g=summary.total_protein_g,
+            carbs_g=summary.total_carbs_g,
+            fat_g=summary.total_fat_g,
+            photo_url=photo_url,
+            logged_at=timestamp,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+
+        return MealLogRecord(
+            id=row.id,
+            user_id=row.user_id,
+            meal_type=row.meal_type,
+            items=row.items,
+            total_kcal=row.total_kcal,
+            protein_g=row.protein_g,
+            carbs_g=row.carbs_g,
+            fat_g=row.fat_g,
+            photo_url=row.photo_url,
+            logged_at=row.logged_at,
+        )
+
+    @staticmethod
+    def get_daily_meal_logs(
+        session: Session,
+        user_id: str,
+        target_date: date,
+    ) -> DailyMealSummary:
+        """Fetch all meal logs for a user on a given UTC date and compute daily totals."""
+        day_start = datetime.combine(target_date, time.min, tzinfo=UTC)
+        day_end = day_start + timedelta(days=1)
+
+        stmt = (
+            select(MealLogRow)
+            .where(
+                MealLogRow.user_id == user_id,
+                MealLogRow.logged_at >= day_start,
+                MealLogRow.logged_at < day_end,
+            )
+            .order_by(MealLogRow.logged_at.asc())
+        )
+        rows = session.scalars(stmt).all()
+        logs = [
+            MealLogRecord(
+                id=row.id,
+                user_id=row.user_id,
+                meal_type=row.meal_type,
+                items=row.items,
+                total_kcal=row.total_kcal,
+                protein_g=row.protein_g,
+                carbs_g=row.carbs_g,
+                fat_g=row.fat_g,
+                photo_url=row.photo_url,
+                logged_at=row.logged_at,
+            )
+            for row in rows
+        ]
+
+        return DailyMealSummary(
+            date=target_date,
+            logs=logs,
+            total_kcal=round(sum(log.total_kcal for log in logs), 1),
+            total_protein_g=round(sum(log.protein_g for log in logs), 1),
+            total_carbs_g=round(sum(log.carbs_g for log in logs), 1),
+            total_fat_g=round(sum(log.fat_g for log in logs), 1),
+        )
