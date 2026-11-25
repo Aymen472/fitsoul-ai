@@ -1,5 +1,18 @@
-"""Safety guardrails and output validators."""
+"""Safety guardrails, supplement safe mode, and meal output validators."""
 
+from app.core.safety.guardrails import (
+    EATING_DISORDER_RESPONSE,
+    EXTREME_DIET_RESPONSE,
+    MEDICAL_EMERGENCY_RESPONSE,
+    PRESCRIPTION_MEDICINE_RESPONSE,
+    SAFE_OUTPUT_FALLBACK,
+    SELF_HARM_RESPONSE,
+    InputSafetyResult,
+    OutputSafetyResult,
+    SafetyCategory,
+    check_input_safety,
+    check_output_safety,
+)
 from app.core.safety.meal_validator import (
     CALORIE_TOLERANCE_RATIO,
     CARB_CAP_TOLERANCE_RATIO,
@@ -13,17 +26,40 @@ from app.core.safety.meal_validator import (
     ValidatedMealPlan,
     validate_meal_plan,
 )
+from app.core.safety.supplements import (
+    MANDATORY_DOCTOR_NOTE,
+    SUPPLEMENT_WHITELIST,
+    SupplementGuidanceResponse,
+    SupplementInfo,
+    get_safe_supplement_info,
+)
 
 __all__ = [
     "CALORIE_TOLERANCE_RATIO",
     "CARB_CAP_TOLERANCE_RATIO",
+    "EATING_DISORDER_RESPONSE",
+    "EXTREME_DIET_RESPONSE",
+    "InputSafetyResult",
+    "MANDATORY_DOCTOR_NOTE",
     "MAX_SERVINGS",
+    "MEDICAL_EMERGENCY_RESPONSE",
     "MIN_SERVINGS",
     "MealType",
     "MealValidationResult",
+    "OutputSafetyResult",
+    "PRESCRIPTION_MEDICINE_RESPONSE",
     "PlannedMealItem",
     "RawDailyMealPlan",
+    "SAFE_OUTPUT_FALLBACK",
+    "SELF_HARM_RESPONSE",
+    "SUPPLEMENT_WHITELIST",
+    "SafetyCategory",
+    "SupplementGuidanceResponse",
+    "SupplementInfo",
     "ValidatedMeal",
     "ValidatedMealPlan",
+    "check_input_safety",
+    "check_output_safety",
+    "get_safe_supplement_info",
     "validate_meal_plan",
 ]
