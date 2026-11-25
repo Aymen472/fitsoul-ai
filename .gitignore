@@ -50,6 +50,10 @@ pnpm-debug.log*
 *.pem
 *.key
 
+# Local databases
+*.db
+*.sqlite3
+
 # OS & IDEs
 .DS_Store
 Thumbs.db
