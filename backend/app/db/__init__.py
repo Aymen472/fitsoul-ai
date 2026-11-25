@@ -10,7 +10,13 @@ from app.db.database import (
     init_db,
     normalize_database_url,
 )
-from app.db.repository import ProfileRecord, ProfileRepository
+from app.db.repository import (
+    DailyMealSummary,
+    MealLogRecord,
+    MealLogRepository,
+    ProfileRecord,
+    ProfileRepository,
+)
 from app.db.tables import (
     FoodRow,
     MealLogRow,
@@ -28,7 +34,10 @@ from app.db.tables import (
 __all__ = [
     "Base",
     "DEFAULT_SQLITE_URL",
+    "DailyMealSummary",
     "FoodRow",
+    "MealLogRecord",
+    "MealLogRepository",
     "MealLogRow",
     "MessageRow",
     "MoodLogRow",

@@ -13,9 +13,10 @@
 - [x] Module 1.5: Supabase SQL schema + RLS migration, SQLAlchemy 2.0 ORM, Profile CRUD API & food seeder (Phase 1 complete!)
 - [x] Module 2.1: Gemini Client Wrapper (`generate_text`, Pydantic structured output, multimodal vision, retries, cost & Langfuse tracing)
 - [x] Module 2.2: AI Meal Planner, deterministic Python validator (±5%, floor, protein/carb/sodium limits), fallback & weekly grocery list
+- [x] Module 2.3: Meal Photo Scanner (Gemini Vision + Pakistani Food DB / USDA matching + Roman Urdu confirmation + `MealLogRepository` + 30-meal eval)
 
 ## Next step
-Start Module 2.3 (Meal Photo Scanner — Gemini Vision + Food DB Matching) on branch `feat/meal-photo-scanner`.
+Start Module 2.4 (Coach Persona & Conversation Intent Router) on branch `feat/coach-persona`.
 
 ## Log
 | Date | Module | What was built | Concepts learned |
@@ -30,3 +31,4 @@ Start Module 2.3 (Meal Photo Scanner — Gemini Vision + Food DB Matching) on br
 | 2026-11-25 | Module 1.5 | Supabase SQL + RLS migration (`supabase/migrations/0001_initial_schema.sql`), SQLAlchemy 2.0 ORM (`app/db/`), Profile CRUD endpoints (`app/api/profiles.py`), food seeder (`scripts/seed_foods.py`), tests (`tests/test_profiles_api.py`) | Postgres + pgvector schema, Row-Level Security (RLS), SQLAlchemy 2.0 `Mapped` models & `session.merge`, FastAPI `Depends` + `dependency_overrides` |
 | 2026-11-25 | Module 2.1 | Gemini client wrapper (`app/ai/client.py`), observability & Langfuse sink (`app/ai/tracing.py`), config updates, mocked unit tests (`tests/test_gemini_client.py`) | Gemini `responseJsonSchema`, multimodal `inlineData`, exponential backoff retries, token cost accounting, best-effort trace sinks |
 | 2026-11-25 | Module 2.2 | Meal planner prompt (`app/ai/prompts/meal_planner_system.txt`), deterministic validator (`app/core/safety/meal_validator.py`), AI planner + fallback + weekly grocery list (`app/ai/meal_planner.py`), 20-profile tests (`tests/test_meal_planner.py`) | LLM-selects / Python-computes architecture, retry-with-error-feedback loop, deterministic constraint satisfaction fallback |
+| 2026-11-25 | Module 2.3 | Vision prompt (`app/ai/prompts/photo_scanner_system.txt`), photo scanner (`app/ai/photo_scanner.py`), `MealLogRepository` (`app/db/repository.py`), 30-meal eval & unit tests (`tests/test_photo_scanner.py`) | Multimodal Vision → Food DB matching, low-confidence human confirmation, user edit recalculation, 30-plate evaluation dataset |
