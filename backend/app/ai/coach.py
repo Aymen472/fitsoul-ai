@@ -336,12 +336,14 @@ class CoachAgent:
         targets: NutritionTargets,
         grounded_data: dict[str, Any],
         history: list[ChatTurn] | None,
+        memories: list[str] | None = None,
     ) -> str:
         history_lines = []
         if history:
             for turn in history[-MAX_HISTORY_TURNS:]:
                 history_lines.append(f"{turn.role}: {turn.content}")
         history_block = "\n".join(history_lines) if history_lines else "(none)"
+        memory_block = "\n".join(f"- {m}" for m in memories) if memories else "(none)"
 
         return (
             f"User Profile Summary: {profile.age}y {profile.gender.value}, "
@@ -350,6 +352,7 @@ class CoachAgent:
             f"daily_target={targets.calories} kcal.\n"
             f"Detected Intent: {intent.value}\n"
             f"Deterministic Grounded Context:\n{json.dumps(grounded_data, indent=2)}\n\n"
+            f"Long-Term User Memories:\n{memory_block}\n\n"
             f"Recent History:\n{history_block}\n\n"
             f"User Message: {message}"
         )
@@ -360,6 +363,7 @@ class CoachAgent:
         profile: UserProfile,
         *,
         history: list[ChatTurn] | None = None,
+        memories: list[str] | None = None,
         daily_logged_kcal: float = 0.0,
         today: date | None = None,
     ) -> CoachReply:
@@ -377,6 +381,7 @@ class CoachAgent:
                 usage=None,
             )
 
+        cleaned_memories = [m.strip() for m in (memories or []) if m.strip()]
         intent = classify_intent(message)
         targets = get_nutrition_targets(profile, today=today)
         grounded_data, fallback_reply, short_circuit = self._prepare_intent_context(
@@ -386,6 +391,8 @@ class CoachAgent:
             targets=targets,
             daily_logged_kcal=daily_logged_kcal,
         )
+        if cleaned_memories:
+            grounded_data["used_memories"] = cleaned_memories
 
         if short_circuit:
             return CoachReply(
@@ -406,6 +413,7 @@ class CoachAgent:
             targets=targets,
             grounded_data=grounded_data,
             history=history,
+            memories=cleaned_memories,
         )
         try:
             ai_res = self.gemini_client.generate_text(

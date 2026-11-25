@@ -1,4 +1,4 @@
-"""Repository layer for user profiles, meal logs, nutrition targets, and food seeding."""
+"""Repository layer for profiles, meal logs, messages, memories, mood logs, and foods."""
 
 from datetime import UTC, date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
@@ -10,7 +10,16 @@ from sqlalchemy.orm import Session
 
 from app.core.nutrition import FoodItem
 from app.core.rules import NutritionTargets, get_nutrition_targets
-from app.db.tables import FoodRow, MealLogRow, NutritionTargetRow, ProfileRow, UserRow
+from app.db.tables import (
+    FoodRow,
+    MealLogRow,
+    MessageRow,
+    MoodLogRow,
+    NutritionTargetRow,
+    ProfileRow,
+    UserMemoryRow,
+    UserRow,
+)
 from app.models import (
     ActivityLevel,
     DietType,
@@ -23,6 +32,11 @@ from app.models import (
 
 if TYPE_CHECKING:
     from app.ai.photo_scanner import PhotoScanSummary
+
+
+def _ensure_utc(dt: datetime) -> datetime:
+    """Normalize naive or tz-aware datetimes to UTC."""
+    return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
 
 
 class ProfileRecord(BaseModel):
@@ -222,6 +236,21 @@ class DailyMealSummary(BaseModel):
     total_fat_g: float
 
 
+def _to_meal_log_record(row: MealLogRow) -> MealLogRecord:
+    return MealLogRecord(
+        id=row.id,
+        user_id=row.user_id,
+        meal_type=row.meal_type,
+        items=row.items,
+        total_kcal=row.total_kcal,
+        protein_g=row.protein_g,
+        carbs_g=row.carbs_g,
+        fat_g=row.fat_g,
+        photo_url=row.photo_url,
+        logged_at=_ensure_utc(row.logged_at),
+    )
+
+
 class MealLogRepository:
     """Data-access operations for logging scanned/confirmed meals and daily summaries."""
 
@@ -236,7 +265,7 @@ class MealLogRepository:
         logged_at: datetime | None = None,
     ) -> MealLogRecord:
         """Persist a confirmed or scanned meal summary to the meal_logs table."""
-        timestamp = logged_at if logged_at is not None else datetime.now(UTC)
+        timestamp = _ensure_utc(logged_at) if logged_at is not None else datetime.now(UTC)
         serialized_items = [item.model_dump(mode="json") for item in summary.items]
         row = MealLogRow(
             id=str(uuid4()),
@@ -254,18 +283,7 @@ class MealLogRepository:
         session.commit()
         session.refresh(row)
 
-        return MealLogRecord(
-            id=row.id,
-            user_id=row.user_id,
-            meal_type=row.meal_type,
-            items=row.items,
-            total_kcal=row.total_kcal,
-            protein_g=row.protein_g,
-            carbs_g=row.carbs_g,
-            fat_g=row.fat_g,
-            photo_url=row.photo_url,
-            logged_at=row.logged_at,
-        )
+        return _to_meal_log_record(row)
 
     @staticmethod
     def get_daily_meal_logs(
@@ -287,21 +305,7 @@ class MealLogRepository:
             .order_by(MealLogRow.logged_at.asc())
         )
         rows = session.scalars(stmt).all()
-        logs = [
-            MealLogRecord(
-                id=row.id,
-                user_id=row.user_id,
-                meal_type=row.meal_type,
-                items=row.items,
-                total_kcal=row.total_kcal,
-                protein_g=row.protein_g,
-                carbs_g=row.carbs_g,
-                fat_g=row.fat_g,
-                photo_url=row.photo_url,
-                logged_at=row.logged_at,
-            )
-            for row in rows
-        ]
+        logs = [_to_meal_log_record(row) for row in rows]
 
         return DailyMealSummary(
             date=target_date,
@@ -311,3 +315,260 @@ class MealLogRepository:
             total_carbs_g=round(sum(log.carbs_g for log in logs), 1),
             total_fat_g=round(sum(log.fat_g for log in logs), 1),
         )
+
+    @staticmethod
+    def get_recent_meal_logs(
+        session: Session,
+        user_id: str,
+        *,
+        days: int = 14,
+        now: datetime | None = None,
+    ) -> list[MealLogRecord]:
+        """Fetch meal logs from the last N days ordered chronologically."""
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+        cutoff = reference - timedelta(days=days)
+
+        stmt = (
+            select(MealLogRow)
+            .where(MealLogRow.user_id == user_id)
+            .order_by(MealLogRow.logged_at.asc(), MealLogRow.id.asc())
+        )
+        rows = session.scalars(stmt).all()
+        return [_to_meal_log_record(row) for row in rows if _ensure_utc(row.logged_at) >= cutoff]
+
+
+class MessageRecord(BaseModel):
+    """Persisted AI coach conversation message."""
+
+    id: str
+    user_id: str
+    role: str
+    content: str
+    channel: str = "web"
+    flagged_safety: bool = False
+    embedding: list[float] | None = None
+    created_at: datetime
+
+
+def _to_message_record(row: MessageRow) -> MessageRecord:
+    return MessageRecord(
+        id=row.id,
+        user_id=row.user_id,
+        role=row.role,
+        content=row.content,
+        channel=row.channel,
+        flagged_safety=row.flagged_safety,
+        embedding=list(row.embedding) if row.embedding is not None else None,
+        created_at=_ensure_utc(row.created_at),
+    )
+
+
+class MessageRepository:
+    """Data-access operations for persistent conversation history."""
+
+    @staticmethod
+    def save_message(
+        session: Session,
+        user_id: str,
+        role: str,
+        content: str,
+        *,
+        channel: str = "web",
+        flagged_safety: bool = False,
+        embedding: list[float] | None = None,
+        created_at: datetime | None = None,
+    ) -> MessageRecord:
+        """Persist a single chat turn to the messages table."""
+        timestamp = _ensure_utc(created_at) if created_at is not None else datetime.now(UTC)
+        row = MessageRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            role=role,
+            content=content,
+            channel=channel,
+            flagged_safety=flagged_safety,
+            embedding=list(embedding) if embedding is not None else None,
+            created_at=timestamp,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_message_record(row)
+
+    @staticmethod
+    def get_recent_messages(
+        session: Session,
+        user_id: str,
+        *,
+        limit: int = 20,
+    ) -> list[MessageRecord]:
+        """Fetch up to `limit` latest messages returned in chronological order."""
+        stmt = (
+            select(MessageRow)
+            .where(MessageRow.user_id == user_id)
+            .order_by(MessageRow.created_at.desc(), MessageRow.id.desc())
+            .limit(limit)
+        )
+        rows = list(session.scalars(stmt).all())
+        rows.reverse()
+        return [_to_message_record(row) for row in rows]
+
+    @staticmethod
+    def get_messages_since(
+        session: Session,
+        user_id: str,
+        *,
+        days: int = 14,
+        now: datetime | None = None,
+    ) -> list[MessageRecord]:
+        """Fetch messages within the last N days ordered chronologically."""
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+        cutoff = reference - timedelta(days=days)
+
+        stmt = (
+            select(MessageRow)
+            .where(MessageRow.user_id == user_id)
+            .order_by(MessageRow.created_at.asc(), MessageRow.id.asc())
+        )
+        rows = session.scalars(stmt).all()
+        return [_to_message_record(row) for row in rows if _ensure_utc(row.created_at) >= cutoff]
+
+
+class UserMemoryRecord(BaseModel):
+    """Persisted long-term semantic memory fact for a user."""
+
+    id: str
+    user_id: str
+    category: str
+    content: str
+    embedding: list[float] | None = None
+    created_at: datetime
+
+
+def _to_memory_record(row: UserMemoryRow) -> UserMemoryRecord:
+    return UserMemoryRecord(
+        id=row.id,
+        user_id=row.user_id,
+        category=row.category,
+        content=row.content,
+        embedding=list(row.embedding) if row.embedding is not None else None,
+        created_at=_ensure_utc(row.created_at),
+    )
+
+
+class MemoryRepository:
+    """Data-access operations for extracted long-term user memories."""
+
+    @staticmethod
+    def save_memory(
+        session: Session,
+        user_id: str,
+        category: str,
+        content: str,
+        *,
+        embedding: list[float] | None = None,
+        created_at: datetime | None = None,
+    ) -> UserMemoryRecord:
+        """Persist a memory fact, deduplicating case-insensitively within user + category."""
+        cleaned = content.strip()
+        if not cleaned:
+            raise ValueError("Memory content cannot be empty")
+
+        existing_stmt = select(UserMemoryRow).where(UserMemoryRow.user_id == user_id)
+        for existing in session.scalars(existing_stmt).all():
+            if (
+                existing.category == category
+                and existing.content.strip().lower() == cleaned.lower()
+            ):
+                return _to_memory_record(existing)
+
+        timestamp = _ensure_utc(created_at) if created_at is not None else datetime.now(UTC)
+        row = UserMemoryRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            category=category,
+            content=cleaned,
+            embedding=list(embedding) if embedding is not None else None,
+            created_at=timestamp,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_memory_record(row)
+
+    @staticmethod
+    def list_memories(session: Session, user_id: str) -> list[UserMemoryRecord]:
+        """List all persisted long-term memories for a user (newest first)."""
+        stmt = (
+            select(UserMemoryRow)
+            .where(UserMemoryRow.user_id == user_id)
+            .order_by(UserMemoryRow.created_at.desc(), UserMemoryRow.id.desc())
+        )
+        return [_to_memory_record(row) for row in session.scalars(stmt).all()]
+
+
+class MoodLogRecord(BaseModel):
+    """Persisted daily mood and emotional trigger log entry."""
+
+    id: str
+    user_id: str
+    mood: str
+    note: str | None = None
+    logged_at: datetime
+
+
+def _to_mood_log_record(row: MoodLogRow) -> MoodLogRecord:
+    return MoodLogRecord(
+        id=row.id,
+        user_id=row.user_id,
+        mood=row.mood,
+        note=row.note,
+        logged_at=_ensure_utc(row.logged_at),
+    )
+
+
+class MoodLogRepository:
+    """Data-access operations for mood check-ins and emotional trigger logs."""
+
+    @staticmethod
+    def save_mood_log(
+        session: Session,
+        user_id: str,
+        mood: str,
+        *,
+        note: str | None = None,
+        logged_at: datetime | None = None,
+    ) -> MoodLogRecord:
+        """Persist a mood log entry to the mood_logs table."""
+        timestamp = _ensure_utc(logged_at) if logged_at is not None else datetime.now(UTC)
+        row = MoodLogRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            mood=mood.strip(),
+            note=note.strip() if note else None,
+            logged_at=timestamp,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_mood_log_record(row)
+
+    @staticmethod
+    def get_recent_mood_logs(
+        session: Session,
+        user_id: str,
+        *,
+        days: int = 14,
+        now: datetime | None = None,
+    ) -> list[MoodLogRecord]:
+        """Fetch mood logs within the last N days ordered chronologically."""
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+        cutoff = reference - timedelta(days=days)
+
+        stmt = (
+            select(MoodLogRow)
+            .where(MoodLogRow.user_id == user_id)
+            .order_by(MoodLogRow.logged_at.asc(), MoodLogRow.id.asc())
+        )
+        rows = session.scalars(stmt).all()
+        return [_to_mood_log_record(row) for row in rows if _ensure_utc(row.logged_at) >= cutoff]
