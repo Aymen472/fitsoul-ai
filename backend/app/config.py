@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     debug: bool = True
     log_level: str = "INFO"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     usda_api_key: str = "DEMO_KEY"
     database_url: str = "sqlite:///./fitsoul_dev.db"
     supabase_url: str = ""
@@ -32,6 +33,11 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Parse comma-separated CORS origins into a cleaned list."""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 @lru_cache

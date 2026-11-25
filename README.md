@@ -65,6 +65,27 @@ flowchart TD
 uv run --project backend pre-commit install
 ```
 
+## Local Setup (Frontend PWA)
+
+1. **Copy frontend environment template (optional for Supabase auth; defaults to local dev auth + `http://127.0.0.1:8000`):**
+   ```bash
+   cp frontend/.env.local.example frontend/.env.local
+   ```
+2. **Install dependencies and run Next.js dev server:**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   Open `http://localhost:3000` (with FastAPI running on `:8000`).
+3. **Run frontend checks:**
+   ```bash
+   npm run typecheck
+   npm run lint
+   npm run test
+   npm run build
+   ```
+
 ## Roadmap
 
 - [x] Planning & architecture docs (`docs/01`–`04`)

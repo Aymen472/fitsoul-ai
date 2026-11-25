@@ -17,9 +17,10 @@
 - [x] Module 2.5: Safety Guardrails (input/output crisis, ED, medicine & crash-diet checks), whitelist-only supplements & 56 red-team tests
 - [x] Module 2.4: Coach Persona, deterministic intent router (10 intents), chat text meal parser & safety-wrapped `CoachAgent`
 - [x] Module 2.6: Long-term memory (`pgvector` migration + semantic retrieval), emotional pattern detector & live `/api/v1/chat` + `/api/v1/meal-plans` REST APIs (Phase 2 complete!)
+- [x] Module 3.1: Next.js 15 PWA setup (manifest, icons, service worker), Tailwind v4 UI shell, hybrid Auth (Supabase + local dev), live Health Onboarding wired to FastAPI + CORS & Frontend CI
 
 ## Next step
-Start Phase 3 — Module 3.1 (Next.js PWA Setup, Tailwind + shadcn/ui & Auth) on branch `feat/pwa-setup` (per ADR-001: PWA before WhatsApp).
+Start Phase 3 — Module 3.2 (Live AI Coach Chat UI with Persistent History, Safety Alerts & Memory/Pattern Insights) on branch `feat/pwa-chat`.
 
 ## Log
 | Date | Module | What was built | Concepts learned |
@@ -38,3 +39,4 @@ Start Phase 3 — Module 3.1 (Next.js PWA Setup, Tailwind + shadcn/ui & Auth) on
 | 2026-11-25 | Module 2.5 | Input/output guardrails (`app/core/safety/guardrails.py`), whitelist-only supplements (`app/core/safety/supplements.py`), 56 red-team + safety tests (`tests/test_safety_guardrails.py`) | Defense-in-depth safety screening, English + Roman Urdu crisis/ED patterns, context-scoped calorie floor checks, high-risk lockout |
 | 2026-11-25 | Module 2.4 | Coach prompt (`app/ai/prompts/coach_system.txt`), intent router + text meal parser (`app/ai/intent_router.py`), safety-wrapped `CoachAgent` (`app/ai/coach.py`), tests (`tests/test_coach_agent.py`) | Deterministic intent routing, natural-language meal parsing → Food DB math, safety-first pre/post LLM wrapping |
 | 2026-11-25 | Module 2.6 | `user_memories` pgvector migration (`0002_user_memories.sql`) + ORM (`app/db/tables.py`), chat/memory/mood repositories (`app/db/repository.py`), deterministic embeddings, semantic retrieval & pattern detector (`app/ai/memory.py`), live `/api/v1/chat` & `/api/v1/meal-plans` APIs (`app/api/chat.py`), tests (`tests/test_memory_and_chat_api.py`) | Semantic memory retrieval (`cosine_similarity` + `pgvector`), bilingual fact extraction, behavioral pattern detection & proactive nudges, end-to-end FastAPI persistence |
+| 2026-11-25 | Module 3.1 | Next.js 15 PWA shell (`frontend/src/app/`, `manifest.ts`, `sw.js`, SVG icons), hybrid auth (`Supabase` + local dev), live Health Onboarding wired to FastAPI + CORS (`app/config.py`, `app/main.py`), Vitest tests & frontend CI job (`.github/workflows/ci.yml`) | Next.js App Router PWA fundamentals, Tailwind v4 tokens, FastAPI `CORSMiddleware`, hybrid auth state management, typed REST error handling |
