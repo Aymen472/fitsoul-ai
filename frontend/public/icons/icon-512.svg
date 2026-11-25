@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="fs-bg-512" x1="40" y1="40" x2="472" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#115e59" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#fs-bg-512)" />
+  <path
+    d="M256 390C256 390 132 315 132 214C132 163.9 172.1 123 221.5 123C240.8 123 250.8 132.1 256 143C261.2 132.1 271.2 123 290.5 123C339.9 123 380 163.9 380 214C380 315 256 390 256 390Z"
+    fill="#fafaf7"
+    fill-opacity="0.96"
+  />
+  <path
+    d="M256 330C256 330 213 285 213 242C213 210 236 186 256 170C276 186 299 210 299 242C299 285 256 330 256 330Z"
+    fill="#0f766e"
+  />
+  <circle cx="256" cy="242" r="16" fill="#f59e0b" />
+</svg>
