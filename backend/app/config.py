@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     payfast_merchant_id: str = ""
     payfast_secured_key: str = ""
     lemonsqueezy_api_key: str = ""
+    admin_api_key: str = ""
 
     model_config = SettingsConfigDict(
         env_file=(str(ROOT_ENV_FILE), ".env"),

@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
-from app.core.billing import PaymentProvider, PlanId, get_plan
-from app.core.nutrition import FoodItem
+from app.core.billing import PaymentProvider, PlanId, compute_entitlements, get_plan
+from app.core.nutrition import FoodItem, GICategory
 from app.core.rules import NutritionTargets, get_nutrition_targets
 from app.db.tables import (
     FoodRow,
@@ -1447,3 +1447,386 @@ class PaymentRepository:
             stmt = stmt.limit(limit)
         rows = session.scalars(stmt).all()
         return [_to_payment_tx_record(row) for row in rows]
+
+
+ESTIMATED_COST_PER_ASSISTANT_TURN_USD = 0.00045
+
+
+class AdminOverviewMetrics(BaseModel):
+    """Platform-wide KPIs for admin dashboard overview."""
+
+    total_users: int
+    total_profiles: int
+    active_subscriptions: int
+    trial_subscriptions: int
+    paid_subscriptions: int
+    revenue_pkr: float
+    revenue_usd: float
+    flagged_safety_count: int
+    total_messages: int
+    estimated_ai_cost_usd: float
+    avg_ai_cost_per_user_usd: float
+    total_foods: int
+
+
+class AdminUserSummary(BaseModel):
+    """Per-user operational summary combining profile, billing, safety flags, and AI cost."""
+
+    user_id: str
+    full_name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    goal: str | None = None
+    is_high_risk: bool = False
+    subscription_plan: str | None = None
+    subscription_status: str = "limited"
+    message_count: int = 0
+    flagged_count: int = 0
+    estimated_ai_cost_usd: float = 0.0
+    created_at: datetime
+
+
+class FlaggedMessageRecord(BaseModel):
+    """Safety-flagged conversation entry surfaced for human review."""
+
+    id: str
+    user_id: str
+    user_full_name: str | None = None
+    user_email: str | None = None
+    role: str
+    content: str
+    channel: str
+    created_at: datetime
+
+
+class UserDeletionSummary(BaseModel):
+    """Audit result returned after deleting all data for a user account."""
+
+    user_id: str
+    deleted: bool
+    records_removed: dict[str, int]
+    deleted_at: datetime
+
+
+class AdminRepository:
+    """Data-access operations for admin KPIs, safety review, food catalog CRUD, and data wipe."""
+
+    @staticmethod
+    def get_overview_metrics(
+        session: Session,
+        *,
+        now: datetime | None = None,
+    ) -> AdminOverviewMetrics:
+        """Compute platform KPIs across users, subscriptions, revenue, safety flags, and AI cost."""
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+
+        total_users = int(session.scalar(select(func.count()).select_from(UserRow)) or 0)
+        total_profiles = int(session.scalar(select(func.count()).select_from(ProfileRow)) or 0)
+
+        active_subs = 0
+        trial_subs = 0
+        paid_subs = 0
+        for sub in session.scalars(select(SubscriptionRow)).all():
+            _resolved, entitlements = compute_entitlements(
+                sub.plan, sub.status, sub.expires_at, now=reference
+            )
+            if entitlements.is_active:
+                active_subs += 1
+                if entitlements.is_trial:
+                    trial_subs += 1
+                else:
+                    paid_subs += 1
+
+        paid_txs = session.scalars(
+            select(PaymentTransactionRow).where(PaymentTransactionRow.status == "paid")
+        ).all()
+        revenue_pkr = round(
+            sum(tx.amount for tx in paid_txs if (tx.currency or "PKR").upper() != "USD"),
+            2,
+        )
+        revenue_usd = round(
+            sum(tx.amount for tx in paid_txs if (tx.currency or "").upper() == "USD"),
+            2,
+        )
+
+        total_messages = int(session.scalar(select(func.count()).select_from(MessageRow)) or 0)
+        assistant_messages = int(
+            session.scalar(
+                select(func.count()).select_from(MessageRow).where(MessageRow.role == "assistant")
+            )
+            or 0
+        )
+        flagged_safety_count = int(
+            session.scalar(
+                select(func.count())
+                .select_from(MessageRow)
+                .where(MessageRow.flagged_safety.is_(True))
+            )
+            or 0
+        )
+
+        estimated_ai_cost_usd = round(assistant_messages * ESTIMATED_COST_PER_ASSISTANT_TURN_USD, 6)
+        avg_ai_cost = round(estimated_ai_cost_usd / total_users, 6) if total_users > 0 else 0.0
+        total_foods = int(session.scalar(select(func.count()).select_from(FoodRow)) or 0)
+
+        return AdminOverviewMetrics(
+            total_users=total_users,
+            total_profiles=total_profiles,
+            active_subscriptions=active_subs,
+            trial_subscriptions=trial_subs,
+            paid_subscriptions=paid_subs,
+            revenue_pkr=revenue_pkr,
+            revenue_usd=revenue_usd,
+            flagged_safety_count=flagged_safety_count,
+            total_messages=total_messages,
+            estimated_ai_cost_usd=estimated_ai_cost_usd,
+            avg_ai_cost_per_user_usd=avg_ai_cost,
+            total_foods=total_foods,
+        )
+
+    @staticmethod
+    def list_users_with_billing(
+        session: Session,
+        *,
+        limit: int = 50,
+        now: datetime | None = None,
+    ) -> list[AdminUserSummary]:
+        """List registered users enriched with profile risk, billing status, and AI usage."""
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+        stmt = select(UserRow).order_by(UserRow.created_at.desc(), UserRow.id.desc())
+        if limit > 0:
+            stmt = stmt.limit(limit)
+        users = session.scalars(stmt).all()
+        if not users:
+            return []
+
+        user_ids = [u.id for u in users]
+        profiles_by_uid = {
+            row.user_id: row
+            for row in session.scalars(
+                select(ProfileRow).where(ProfileRow.user_id.in_(user_ids))
+            ).all()
+        }
+        subs_by_uid = {
+            row.user_id: row
+            for row in session.scalars(
+                select(SubscriptionRow).where(SubscriptionRow.user_id.in_(user_ids))
+            ).all()
+        }
+
+        msg_counts: dict[str, int] = {uid: 0 for uid in user_ids}
+        assistant_counts: dict[str, int] = {uid: 0 for uid in user_ids}
+        flagged_counts: dict[str, int] = {uid: 0 for uid in user_ids}
+        for msg in session.scalars(
+            select(MessageRow).where(MessageRow.user_id.in_(user_ids))
+        ).all():
+            msg_counts[msg.user_id] = msg_counts.get(msg.user_id, 0) + 1
+            if msg.role == "assistant":
+                assistant_counts[msg.user_id] = assistant_counts.get(msg.user_id, 0) + 1
+            if msg.flagged_safety:
+                flagged_counts[msg.user_id] = flagged_counts.get(msg.user_id, 0) + 1
+
+        summaries: list[AdminUserSummary] = []
+        for user in users:
+            prof = profiles_by_uid.get(user.id)
+            sub = subs_by_uid.get(user.id)
+            if sub is not None:
+                resolved_status, _ent = compute_entitlements(
+                    sub.plan, sub.status, sub.expires_at, now=reference
+                )
+                sub_plan: str | None = sub.plan
+                sub_status = resolved_status.value
+            else:
+                sub_plan = None
+                sub_status = "limited"
+
+            ai_cost = round(
+                assistant_counts.get(user.id, 0) * ESTIMATED_COST_PER_ASSISTANT_TURN_USD,
+                6,
+            )
+            summaries.append(
+                AdminUserSummary(
+                    user_id=user.id,
+                    full_name=user.full_name,
+                    email=user.email,
+                    phone=user.phone,
+                    goal=prof.goal if prof is not None else None,
+                    is_high_risk=bool(prof.is_high_risk) if prof is not None else False,
+                    subscription_plan=sub_plan,
+                    subscription_status=sub_status,
+                    message_count=msg_counts.get(user.id, 0),
+                    flagged_count=flagged_counts.get(user.id, 0),
+                    estimated_ai_cost_usd=ai_cost,
+                    created_at=_ensure_utc(user.created_at),
+                )
+            )
+        return summaries
+
+    @staticmethod
+    def list_flagged_messages(
+        session: Session,
+        *,
+        limit: int = 50,
+    ) -> list[FlaggedMessageRecord]:
+        """Fetch messages flagged by safety guardrails ordered newest first."""
+        stmt = (
+            select(MessageRow)
+            .where(MessageRow.flagged_safety.is_(True))
+            .order_by(MessageRow.created_at.desc(), MessageRow.id.desc())
+        )
+        if limit > 0:
+            stmt = stmt.limit(limit)
+        rows = session.scalars(stmt).all()
+        if not rows:
+            return []
+
+        user_ids = list({row.user_id for row in rows})
+        users_by_id = {
+            u.id: u for u in session.scalars(select(UserRow).where(UserRow.id.in_(user_ids))).all()
+        }
+        return [
+            FlaggedMessageRecord(
+                id=row.id,
+                user_id=row.user_id,
+                user_full_name=users_by_id[row.user_id].full_name
+                if row.user_id in users_by_id
+                else None,
+                user_email=users_by_id[row.user_id].email if row.user_id in users_by_id else None,
+                role=row.role,
+                content=row.content,
+                channel=row.channel,
+                created_at=_ensure_utc(row.created_at),
+            )
+            for row in rows
+        ]
+
+    @staticmethod
+    def ensure_foods_seeded(session: Session, fallback_foods: list[FoodItem]) -> int:
+        """Seed the SQL foods table from curated CSV foods if currently empty."""
+        count = int(session.scalar(select(func.count()).select_from(FoodRow)) or 0)
+        if count == 0 and fallback_foods:
+            return ProfileRepository.seed_foods(session, fallback_foods)
+        return count
+
+    @staticmethod
+    def list_foods(
+        session: Session,
+        *,
+        query: str = "",
+        category: str = "",
+        limit: int = 100,
+    ) -> list[FoodItem]:
+        """Search and filter the SQL foods catalog."""
+        stmt = select(FoodRow).order_by(FoodRow.name.asc(), FoodRow.id.asc())
+        rows = session.scalars(stmt).all()
+
+        q_norm = query.strip().lower()
+        cat_norm = category.strip().lower()
+        results: list[FoodItem] = []
+        for row in rows:
+            if cat_norm and row.category.strip().lower() != cat_norm:
+                continue
+            if q_norm:
+                haystack = [row.id, row.name, row.urdu_name, *(row.aliases or [])]
+                if not any(q_norm in str(part).lower() for part in haystack if part):
+                    continue
+            results.append(
+                FoodItem(
+                    id=row.id,
+                    name=row.name,
+                    urdu_name=row.urdu_name,
+                    aliases=list(row.aliases or []),
+                    category=row.category,
+                    serving_desc=row.serving_desc,
+                    grams=row.grams,
+                    kcal=row.kcal,
+                    protein=row.protein,
+                    carbs=row.carbs,
+                    fat=row.fat,
+                    fiber=row.fiber,
+                    sodium_mg=row.sodium_mg,
+                    gi_category=GICategory(row.gi_category.strip().lower()),
+                    tags=list(row.tags or []),
+                )
+            )
+            if limit > 0 and len(results) >= limit:
+                break
+        return results
+
+    @staticmethod
+    def upsert_food(session: Session, food: FoodItem) -> FoodItem:
+        """Insert or update a food item in the SQL foods catalog."""
+        session.merge(
+            FoodRow(
+                id=food.id,
+                name=food.name,
+                urdu_name=food.urdu_name,
+                aliases=list(food.aliases),
+                category=food.category,
+                serving_desc=food.serving_desc,
+                grams=food.grams,
+                kcal=food.kcal,
+                protein=food.protein,
+                carbs=food.carbs,
+                fat=food.fat,
+                fiber=food.fiber,
+                sodium_mg=food.sodium_mg,
+                gi_category=food.gi_category.value,
+                tags=list(food.tags),
+            )
+        )
+        session.commit()
+        return food
+
+    @staticmethod
+    def delete_food(session: Session, food_id: str) -> bool:
+        """Delete a food item from the SQL foods catalog by ID."""
+        row = session.get(FoodRow, food_id.strip())
+        if row is None:
+            return False
+        session.delete(row)
+        session.commit()
+        return True
+
+    @staticmethod
+    def delete_user_account_data(session: Session, user_id: str) -> UserDeletionSummary | None:
+        """Permanently delete a user and all associated records across every table."""
+        user_row = session.get(UserRow, user_id)
+        if user_row is None:
+            return None
+
+        child_targets: tuple[tuple[Any, Any, str], ...] = (
+            (MealLogRow, MealLogRow.user_id, "meal_logs"),
+            (WaterLogRow, WaterLogRow.user_id, "water_logs"),
+            (WeightLogRow, WeightLogRow.user_id, "weight_logs"),
+            (WorkoutRow, WorkoutRow.user_id, "workouts"),
+            (MoodLogRow, MoodLogRow.user_id, "mood_logs"),
+            (MessageRow, MessageRow.user_id, "messages"),
+            (UserMemoryRow, UserMemoryRow.user_id, "user_memories"),
+            (NotificationLogRow, NotificationLogRow.user_id, "notification_logs"),
+            (
+                NotificationPreferenceRow,
+                NotificationPreferenceRow.user_id,
+                "notification_preferences",
+            ),
+            (PaymentTransactionRow, PaymentTransactionRow.user_id, "payment_transactions"),
+            (SubscriptionRow, SubscriptionRow.user_id, "subscriptions"),
+            (NutritionTargetRow, NutritionTargetRow.user_id, "nutrition_targets"),
+            (ProfileRow, ProfileRow.user_id, "profiles"),
+        )
+
+        removed: dict[str, int] = {}
+        for model, col, label in child_targets:
+            res = session.execute(delete(model).where(col == user_id))
+            removed[label] = int(getattr(res, "rowcount", 0) or 0)
+
+        user_res = session.execute(delete(UserRow).where(UserRow.id == user_id))
+        removed["users"] = int(getattr(user_res, "rowcount", 0) or 0)
+        session.commit()
+
+        return UserDeletionSummary(
+            user_id=user_id,
+            deleted=True,
+            records_removed=removed,
+            deleted_at=datetime.now(UTC),
+        )
