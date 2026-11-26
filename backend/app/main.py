@@ -10,6 +10,7 @@ from app.api.chat import router as chat_router
 from app.api.health import router as health_router
 from app.api.profiles import router as profiles_router
 from app.api.tracking import router as tracking_router
+from app.api.whatsapp import router as whatsapp_router
 from app.config import get_settings
 from app.db import get_engine, init_db
 
@@ -41,6 +42,7 @@ def create_app(initialize_db: bool = True) -> FastAPI:
     application.include_router(profiles_router)
     application.include_router(chat_router)
     application.include_router(tracking_router)
+    application.include_router(whatsapp_router)
     return application
 
 
