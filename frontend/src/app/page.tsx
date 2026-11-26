@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  BellRing,
   Dumbbell,
   MessageCircleHeart,
   ShieldCheck,
@@ -384,7 +385,7 @@ export default function HomePage() {
       )}
 
       {/* Quick Feature Links */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Link href="/chat" className="group block">
           <Card className="h-full transition-colors group-hover:border-[#0f766e]/50">
             <CardHeader>
@@ -403,7 +404,7 @@ export default function HomePage() {
               <Utensils className="h-6 w-6 text-[#d97706]" />
               <CardTitle className="mt-2 text-base">Pakistani Meal Plan</CardTitle>
               <CardDescription>
-                Desi balanced plans strictly verified against your calorie & macro limits.
+                Desi balanced plans strictly verified against your calorie &amp; macro limits.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -413,9 +414,21 @@ export default function HomePage() {
           <Card className="h-full transition-colors group-hover:border-[#0f766e]/50">
             <CardHeader>
               <Dumbbell className="h-6 w-6 text-[#0f766e]" />
-              <CardTitle className="mt-2 text-base">Workouts & Face Yoga</CardTitle>
+              <CardTitle className="mt-2 text-base">Workouts &amp; Face Yoga</CardTitle>
               <CardDescription>
                 Joint-friendly home routines aur guided timer player.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/notifications" className="group block">
+          <Card className="h-full transition-colors group-hover:border-[#0f766e]/50">
+            <CardHeader>
+              <BellRing className="h-6 w-6 text-[#0f766e]" />
+              <CardTitle className="mt-2 text-base">WhatsApp Reminders</CardTitle>
+              <CardDescription>
+                Opt-in template alerts, sleep window aur PWA deep-link schedule.
               </CardDescription>
             </CardHeader>
           </Card>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BellRing,
   Dumbbell,
   HeartPulse,
   Home,
@@ -25,6 +26,10 @@ const NAV_ITEMS = [
   { href: "/plan", label: "Meals", icon: Utensils },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
   { href: "/onboarding", label: "Profile", icon: UserCheck },
+];
+
+const DESKTOP_EXTRA_NAV = [
+  { href: "/notifications", label: "Reminders", icon: BellRing },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -60,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {[...NAV_ITEMS, ...DESKTOP_EXTRA_NAV].map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
             return (
               <Link
@@ -123,19 +128,33 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="text-base font-bold text-slate-900">FitSoul AI</span>
           </Link>
 
-          {user ? (
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-              <span className="sr-only sm:not-sr-only">Sign out</span>
-            </Button>
-          ) : (
-            <Link href="/login">
-              <Button variant="secondary" size="sm">
-                <LogIn className="h-4 w-4" />
-                Sign in
-              </Button>
+          <div className="flex items-center gap-1.5">
+            <Link
+              href="/notifications"
+              aria-label="WhatsApp Reminders"
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+                pathname === "/notifications"
+                  ? "bg-[#f0f7f4] text-[#0f766e]"
+                  : "text-slate-600 hover:bg-slate-100",
+              )}
+            >
+              <BellRing className="h-4 w-4" />
             </Link>
-          )}
+            {user ? (
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" />
+                <span className="sr-only sm:not-sr-only">Sign out</span>
+              </Button>
+            ) : (
+              <Link href="/login">
+                <Button variant="secondary" size="sm">
+                  <LogIn className="h-4 w-4" />
+                  Sign in
+                </Button>
+              </Link>
+            )}
+          </div>
         </header>
 
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">

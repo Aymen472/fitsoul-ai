@@ -2,6 +2,7 @@
 
 import hmac
 import json
+from datetime import datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -19,13 +20,17 @@ from app.db import (
     normalize_phone_digits,
 )
 from app.services import (
+    SchedulePreviewResponse,
+    SchedulerRunSummary,
     TemplateDefinition,
     WhatsAppClientError,
     WhatsAppCloudClient,
     WhatsAppTemplateName,
     build_pwa_deep_link,
+    evaluate_due_notifications_for_user,
     list_template_definitions,
     parse_webhook_events,
+    run_proactive_scheduler,
     verify_webhook_signature,
 )
 
@@ -410,3 +415,65 @@ def read_notification_logs(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
 
     return NotificationRepository.list_user_notifications(db, user_id, limit=limit)
+
+
+class SchedulerRunRequest(BaseModel):
+    """Payload to trigger a proactive notification scheduler sweep (cron or manual dry-run)."""
+
+    user_id: str | None = None
+    dry_run: bool = False
+    at_utc: datetime | None = None
+
+
+@router.get(
+    "/api/v1/notifications/{user_id}/schedule-preview",
+    response_model=SchedulePreviewResponse,
+)
+def preview_user_notification_schedule(
+    user_id: str,
+    db: DbSession,
+    at_utc: Annotated[datetime | None, Query()] = None,
+) -> SchedulePreviewResponse:
+    """Preview a user's local schedule, quiet-hours status, and currently due notifications."""
+    try:
+        _jobs, _in_quiet, _dups, preview = evaluate_due_notifications_for_user(
+            db,
+            user_id,
+            now=at_utc,
+        )
+        return preview
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
+@router.post(
+    "/api/v1/notifications/scheduler/run",
+    response_model=SchedulerRunSummary,
+)
+def trigger_notification_scheduler(
+    request: Request,
+    payload: SchedulerRunRequest,
+    db: DbSession,
+    settings: WhatsAppSettingsDep,
+    whatsapp_client: WhatsAppClientDep,
+) -> SchedulerRunSummary:
+    """Run proactive scheduler across opted-in users (guarded by optional X-Scheduler-Secret)."""
+    expected_secret = settings.scheduler_secret.strip()
+    if expected_secret:
+        provided_secret = (request.headers.get("X-Scheduler-Secret") or "").strip()
+        if not hmac.compare_digest(provided_secret, expected_secret):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid scheduler secret",
+            )
+
+    try:
+        return run_proactive_scheduler(
+            db,
+            whatsapp_client,
+            now=payload.at_utc,
+            user_id=payload.user_id,
+            dry_run=payload.dry_run,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc

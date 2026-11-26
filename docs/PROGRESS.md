@@ -23,9 +23,10 @@
 - [x] Module 3.4: Weekly Pakistani Meal Plan (`POST /api/v1/meal-plans/{user_id}/weekly`), compliant Meal Swap (`POST /api/v1/meal-plans/{user_id}/swap`) & interactive 7-day Grocery List UI (`/plan`)
 - [x] Module 3.5: Workout & Face Yoga library (`core/workouts/`), MET calorie burn logging (`POST/GET /tracking/{user_id}/workouts`) & Guided Timer Player UI (`/workouts`) (**Phase 3 Complete!**)
 - [x] Module 4.1: Meta WhatsApp Cloud API client (`services/whatsapp_client.py`), 7 approved templates + PWA deep links (`services/whatsapp_templates.py`), signed webhook (`GET/POST /webhooks/whatsapp`) & notification preferences/logs (`0003_whatsapp_notifications.sql`, `api/whatsapp.py`)
+- [x] Module 4.2: Proactive Notification Scheduler (`services/notification_scheduler.py`) with timezone + quiet-hours suppression & slot deduplication, `/schedule-preview` + `/scheduler/run` endpoints, and `/notifications` Settings & Preview PWA UI (**Phase 4 Complete!**)
 
 ## Next step
-Start Phase 4 — Module 4.2 (Proactive Notification Scheduler, Timezone/Sleep Window & Frontend Notification Settings UI) on branch `feat/whatsapp-scheduler`.
+Start Phase 5 — Module 5.1 (Subscriptions, 7-day Trial Logic & Payment Gateway Integration) on branch `feat/subscriptions-payments`.
 
 ## Log
 | Date | Module | What was built | Concepts learned |
@@ -50,3 +51,4 @@ Start Phase 4 — Module 4.2 (Proactive Notification Scheduler, Timezone/Sleep W
 | 2026-11-26 | Module 3.4 | `AIMealPlanner.swap_meal_day` (`app/ai/meal_planner.py`), `/weekly` & `/swap` endpoints (`app/api/chat.py`), 7-day `/plan` UI (`MealSlotCard`, `GroceryListPanel`, `meal-plan-helpers.ts`), unit & API tests | Rule-compliant meal swapping with fallback rotation, client-side weekly grocery recalculation & aisle grouping, localStorage checklist persistence |
 | 2026-11-26 | Module 3.5 | Workout & Face Yoga library + MET calculator (`app/core/workouts/`), `WorkoutRepository` (`app/db/repository.py`), workout routes & streak hook (`app/api/tracking.py`), Guided Timer Player (`GuidedWorkoutPlayer.tsx`, `app/workouts/page.tsx`, `workout-helpers.ts`), tests (`tests/test_workouts_api.py`, `workout-helpers.test.ts`) | MET-based calorie burn (`MET * kg * hours`), contraindication filtering, React 19 strict-safe countdown state machine, Web Speech API cues |
 | 2026-11-26 | Module 4.1 | Meta WhatsApp Cloud API client (`services/whatsapp_client.py`), 7 approved templates (`services/whatsapp_templates.py`), Supabase migration (`0003_whatsapp_notifications.sql`) + `NotificationRepository` (`app/db/repository.py`), signed webhook & notification routes (`app/api/whatsapp.py`), tests (`tests/test_whatsapp_api.py`) | Meta Graph Cloud API template payloads, HMAC `X-Hub-Signature-256` verification, `STOP`/`START` opt-in state machine, ADR-001 PWA redirect replies |
+| 2026-11-26 | Module 4.2 | Proactive scheduler (`services/notification_scheduler.py`) with quiet hours & slot dedup, `schedule-preview` & `scheduler/run` endpoints (`app/api/whatsapp.py`), `/notifications` PWA Settings/Preview UI (`app/notifications/page.tsx`, `notification-helpers.ts`), backend & frontend tests | ZoneInfo timezone-aware scheduling, sleep-window suppression, idempotent `slot_key` deduplication, `X-Scheduler-Secret` guard, Next.js parallel settings hydration |
