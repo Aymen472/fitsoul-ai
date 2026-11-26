@@ -18,6 +18,15 @@ from app.ai import (
 )
 from app.core.nutrition import FoodItem, get_food_db
 from app.core.rules import NutritionTargets
+from app.core.workouts import (
+    DEFAULT_FACE_YOGA_MET,
+    DEFAULT_FITNESS_MET,
+    WorkoutCategory,
+    WorkoutRoutine,
+    calculate_calories_burned_met,
+    get_routine_by_id,
+    list_routines,
+)
 from app.db import (
     MealLogRecord,
     MealLogRepository,
@@ -30,6 +39,8 @@ from app.db import (
     WaterLogRepository,
     WeightLogRecord,
     WeightLogRepository,
+    WorkoutLogRecord,
+    WorkoutRepository,
     get_db,
 )
 
@@ -97,6 +108,15 @@ class MoodLogRequest(BaseModel):
 
     mood: str = Field(min_length=1, max_length=32)
     note: str | None = Field(default=None, max_length=500)
+
+
+class WorkoutLogRequest(BaseModel):
+    """Completed home fitness or face yoga session payload."""
+
+    routine_id: str | None = None
+    routine_name: str | None = Field(default=None, max_length=255)
+    workout_type: Literal["fitness", "face_yoga"] = "fitness"
+    duration_minutes: int = Field(gt=0, le=180)
 
 
 class DashboardSummary(BaseModel):
@@ -273,6 +293,85 @@ def log_mood_checkin(
     return MoodLogRepository.save_mood_log(db, user_id, payload.mood, note=payload.note)
 
 
+@router.get("/workouts/routines", response_model=list[WorkoutRoutine])
+def get_workout_routines(
+    workout_type: Annotated[WorkoutCategory | None, Query()] = None,
+    avoid: Annotated[str, Query(max_length=100)] = "",
+) -> list[WorkoutRoutine]:
+    """Return guided fitness and face yoga routines filtered by joint contraindications."""
+    exclude_tags = [tag.strip() for tag in avoid.split(",") if tag.strip()]
+    return list_routines(
+        workout_type=workout_type,
+        exclude_contraindications=exclude_tags,
+    )
+
+
+@router.post(
+    "/tracking/{user_id}/workouts",
+    response_model=WorkoutLogRecord,
+    status_code=status.HTTP_201_CREATED,
+)
+def log_completed_workout(
+    user_id: str,
+    payload: WorkoutLogRequest,
+    db: DbSession,
+) -> WorkoutLogRecord:
+    """Compute MET-based calories burned and persist a completed workout session."""
+    record = ProfileRepository.get_profile(db, user_id)
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+
+    if payload.routine_id and payload.routine_id.strip():
+        routine = get_routine_by_id(payload.routine_id)
+        if routine is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Routine not found")
+        routine_name = routine.name
+        workout_type = routine.workout_type.value
+        met_value = routine.met_value
+    else:
+        cleaned_name = (payload.routine_name or "").strip()
+        if not cleaned_name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="routine_id or routine_name is required",
+            )
+        routine_name = cleaned_name
+        workout_type = payload.workout_type
+        met_value = DEFAULT_FACE_YOGA_MET if workout_type == "face_yoga" else DEFAULT_FITNESS_MET
+
+    latest_weights = WeightLogRepository.get_recent_weight_logs(db, user_id, days=90, limit=1)
+    weight_kg = latest_weights[-1].weight_kg if latest_weights else record.profile.weight_kg
+    calories_burned = calculate_calories_burned_met(
+        met_value=met_value,
+        weight_kg=weight_kg,
+        duration_minutes=payload.duration_minutes,
+    )
+
+    return WorkoutRepository.save_workout(
+        db,
+        user_id,
+        routine_name=routine_name,
+        workout_type=workout_type,
+        duration_minutes=payload.duration_minutes,
+        calories_burned=calories_burned,
+    )
+
+
+@router.get("/tracking/{user_id}/workouts", response_model=list[WorkoutLogRecord])
+def get_workout_history(
+    user_id: str,
+    db: DbSession,
+    days: Annotated[int, Query(ge=1, le=90)] = 30,
+) -> list[WorkoutLogRecord]:
+    """Return user's completed fitness and face yoga sessions (newest first)."""
+    record = ProfileRepository.get_profile(db, user_id)
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+
+    logs = WorkoutRepository.get_recent_workouts(db, user_id, days=days, limit=50)
+    return list(reversed(logs))
+
+
 @router.get("/tracking/{user_id}/dashboard", response_model=DashboardSummary)
 def get_user_dashboard(user_id: str, db: DbSession) -> DashboardSummary:
     """Aggregate today's calories, macros, water, weight history, streaks, and patterns."""
@@ -290,6 +389,7 @@ def get_user_dashboard(user_id: str, db: DbSession) -> DashboardSummary:
     weights_90d = WeightLogRepository.get_recent_weight_logs(
         db, user_id, days=90, limit=60, now=now
     )
+    workouts_30d = WorkoutRepository.get_recent_workouts(db, user_id, days=30, now=now)
     messages_14d = MessageRepository.get_messages_since(db, user_id, days=14, now=now)
     memories = MemoryRepository.list_memories(db, user_id)
 
@@ -310,6 +410,7 @@ def get_user_dashboard(user_id: str, db: DbSession) -> DashboardSummary:
             *(w.logged_at for w in water_30d),
             *(mood.logged_at for mood in moods_30d),
             *(wt.logged_at for wt in weights_90d),
+            *(wk.completed_at for wk in workouts_30d),
         ],
         today_local=local_today,
         tz=tz,
