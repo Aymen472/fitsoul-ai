@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     whatsapp_api_version: str = "v22.0"
     pwa_base_url: str = "http://localhost:3000"
     scheduler_secret: str = ""
+    payment_webhook_secret: str = ""
+    safepay_api_key: str = ""
+    safepay_env: str = "sandbox"
+    payfast_merchant_id: str = ""
+    payfast_secured_key: str = ""
+    lemonsqueezy_api_key: str = ""
 
     model_config = SettingsConfigDict(
         env_file=(str(ROOT_ENV_FILE), ".env"),

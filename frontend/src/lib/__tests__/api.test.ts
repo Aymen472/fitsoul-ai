@@ -2,9 +2,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   ApiError,
+  cancelUserSubscription,
   checkHealth,
+  confirmSandboxPayment,
+  createBillingCheckout,
   createOrUpsertProfile,
   generateWeeklyMealPlan,
+  getBillingPlans,
+  getBillingStatus,
   getChatHistory,
   getDashboard,
   getNotificationLogs,
@@ -24,6 +29,7 @@ import {
   searchFoods,
   sendChatMessage,
   sendUserNotification,
+  startFreeTrial,
   swapMealPlanSlot,
   updateNotificationPreferences,
   type ProfileUpsertRequest,
@@ -461,6 +467,93 @@ describe("typed FastAPI client", () => {
       6,
       "http://127.0.0.1:8000/api/v1/notifications/u1/logs?limit=30",
       expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("calls billing plans, subscription status, trial, checkout, cancel, and webhook endpoints", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ user_id: "u1", trial_eligible: true }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "sub-1", plan: "trial" }), { status: 201 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            transaction: { id: "tx-1", provider_order_id: "fs_abc", provider: "jazzcash" },
+            checkout_url: "http://localhost:3000/billing?checkout_order=fs_abc",
+            sandbox_mode: true,
+            instructions: "Pay",
+          }),
+          { status: 201 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            status: "ok",
+            already_processed: false,
+            transaction: { status: "paid" },
+            subscription: { plan: "pro", status: "active" },
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "sub-1", status: "cancelled" }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getBillingPlans();
+    const statusRes = await getBillingStatus("u1");
+    const trialRes = await startFreeTrial("u1");
+    const checkoutRes = await createBillingCheckout("u1", {
+      plan_id: "pro",
+      provider: "jazzcash",
+    });
+    const webhookRes = await confirmSandboxPayment("jazzcash", {
+      order_id: "fs_abc",
+      event: "payment.succeeded",
+    });
+    const cancelRes = await cancelUserSubscription("u1");
+
+    expect(statusRes.trial_eligible).toBe(true);
+    expect(trialRes.plan).toBe("trial");
+    expect(checkoutRes.sandbox_mode).toBe(true);
+    expect(webhookRes.transaction.status).toBe("paid");
+    expect(cancelRes.status).toBe("cancelled");
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://127.0.0.1:8000/api/v1/billing/plans",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://127.0.0.1:8000/api/v1/billing/u1/subscription",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "http://127.0.0.1:8000/api/v1/billing/u1/trial",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "http://127.0.0.1:8000/api/v1/billing/u1/checkout",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      5,
+      "http://127.0.0.1:8000/webhooks/payments/jazzcash",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      6,
+      "http://127.0.0.1:8000/api/v1/billing/u1/cancel",
+      expect.objectContaining({ method: "POST" }),
     );
   });
 });

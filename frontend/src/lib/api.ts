@@ -440,6 +440,91 @@ export interface SchedulePreviewResponse {
   upcoming_slots: UpcomingSlotSummary[];
 }
 
+export type PlanId = "trial" | "basic" | "pro" | "transformation" | "overseas";
+
+export type PaymentProvider =
+  | "safepay"
+  | "payfast"
+  | "jazzcash"
+  | "easypaisa"
+  | "lemonsqueezy"
+  | "mock";
+
+export interface PlanDefinition {
+  id: PlanId;
+  name: string;
+  tagline: string;
+  price_amount: number;
+  currency: "PKR" | "USD";
+  duration_days: number;
+  is_popular: boolean;
+  features: string[];
+  supported_providers: PaymentProvider[];
+}
+
+export interface AccessEntitlements {
+  access_mode: "full" | "basic" | "limited";
+  is_active: boolean;
+  is_trial: boolean;
+  days_remaining: number;
+  renewal_due_soon: boolean;
+  can_use_ai_chat: boolean;
+  can_use_photo_scanner: boolean;
+  can_use_workouts_face_yoga: boolean;
+  can_use_weekly_meal_plan: boolean;
+  can_use_whatsapp_reminders: boolean;
+  daily_chat_limit: number | null;
+}
+
+export interface SubscriptionRecord {
+  id: string;
+  user_id: string;
+  plan: string;
+  status: string;
+  provider: string | null;
+  starts_at: string;
+  expires_at: string | null;
+  created_at: string;
+}
+
+export interface PaymentTransactionRecord {
+  id: string;
+  user_id: string;
+  plan: string;
+  provider: string;
+  amount: number;
+  currency: string;
+  status: string;
+  provider_order_id: string;
+  checkout_url: string | null;
+  metadata_json: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  paid_at: string | null;
+}
+
+export interface BillingStatusResponse {
+  user_id: string;
+  subscription: SubscriptionRecord | null;
+  entitlements: AccessEntitlements;
+  trial_eligible: boolean;
+  transactions: PaymentTransactionRecord[];
+}
+
+export interface CheckoutResponse {
+  transaction: PaymentTransactionRecord;
+  checkout_url: string;
+  sandbox_mode: boolean;
+  instructions: string;
+}
+
+export interface PaymentWebhookAckResponse {
+  status: string;
+  already_processed: boolean;
+  transaction: PaymentTransactionRecord;
+  subscription: SubscriptionRecord | null;
+}
+
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"
 ).replace(/\/+$/, "");
@@ -765,5 +850,60 @@ export async function getNotificationSchedulePreview(
   return requestJson<SchedulePreviewResponse>(
     `/api/v1/notifications/${encodeURIComponent(userId)}/schedule-preview`,
     { method: "GET" },
+  );
+}
+
+export async function getBillingPlans(): Promise<PlanDefinition[]> {
+  return requestJson<PlanDefinition[]>("/api/v1/billing/plans", { method: "GET" });
+}
+
+export async function getBillingStatus(userId: string): Promise<BillingStatusResponse> {
+  return requestJson<BillingStatusResponse>(
+    `/api/v1/billing/${encodeURIComponent(userId)}/subscription`,
+    { method: "GET" },
+  );
+}
+
+export async function startFreeTrial(userId: string): Promise<SubscriptionRecord> {
+  return requestJson<SubscriptionRecord>(
+    `/api/v1/billing/${encodeURIComponent(userId)}/trial`,
+    { method: "POST" },
+  );
+}
+
+export async function createBillingCheckout(
+  userId: string,
+  payload: { plan_id: PlanId; provider: PaymentProvider },
+): Promise<CheckoutResponse> {
+  return requestJson<CheckoutResponse>(
+    `/api/v1/billing/${encodeURIComponent(userId)}/checkout`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function cancelUserSubscription(userId: string): Promise<SubscriptionRecord> {
+  return requestJson<SubscriptionRecord>(
+    `/api/v1/billing/${encodeURIComponent(userId)}/cancel`,
+    { method: "POST" },
+  );
+}
+
+export async function confirmSandboxPayment(
+  provider: PaymentProvider,
+  payload: {
+    order_id: string;
+    event: "payment.succeeded" | "payment.failed" | "payment.refunded";
+    provider_reference?: string;
+  },
+): Promise<PaymentWebhookAckResponse> {
+  return requestJson<PaymentWebhookAckResponse>(
+    `/webhooks/payments/${encodeURIComponent(provider)}`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
   );
 }
