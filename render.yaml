@@ -1,0 +1,64 @@
+services:
+  - type: web
+    name: fitsoul-ai-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    plan: starter
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PWA_BASE_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ADMIN_API_KEY
+        sync: false
+      - key: SCHEDULER_SECRET
+        sync: false
+      - key: PAYMENT_WEBHOOK_SECRET
+        sync: false
+      - key: SAFEPAY_API_KEY
+        sync: false
+      - key: SAFEPAY_ENV
+        value: sandbox
+      - key: PAYFAST_MERCHANT_ID
+        sync: false
+      - key: PAYFAST_SECURED_KEY
+        sync: false
+      - key: LEMONSQUEEZY_API_KEY
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_APP_SECRET
+        sync: false
+
+  - type: cron
+    name: fitsoul-ai-scheduler
+    runtime: python
+    schedule: "0 * * * *"
+    buildCommand: "true"
+    startCommand: >-
+      python -c "import os, urllib.request; req = urllib.request.Request(os.environ['API_BASE_URL'].rstrip('/') + '/api/v1/notifications/scheduler/run', data=b'{}', headers={'Content-Type': 'application/json', 'X-Scheduler-Secret': os.environ['SCHEDULER_SECRET']}, method='POST'); print(urllib.request.urlopen(req, timeout=20).read().decode())"
+    envVars:
+      - key: API_BASE_URL
+        sync: false
+      - key: SCHEDULER_SECRET
+        sync: false

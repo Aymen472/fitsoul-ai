@@ -85,6 +85,10 @@ uv run --project backend pre-commit install
    npm run test
    npm run build
    ```
+4. **Or run both services together with Docker Compose:**
+   ```bash
+   docker compose up --build
+   ```
 
 ## Roadmap
 
@@ -94,7 +98,7 @@ uv run --project backend pre-commit install
 - [x] **Phase 2:** AI brain (meal planner + validator, photo scanner, safety guardrails, coach persona, long-term memory & pattern detector)
 - [x] **Phase 3:** Next.js PWA (auth, chat with history, dashboard, workout & face yoga player)
 - [x] **Phase 4:** WhatsApp notifications (webhook, approved templates, scheduler)
-- [ ] **Phase 5:** Payments, admin panel, beta launch
+- [x] **Phase 5:** Payments, admin panel, beta launch
 - [ ] **Phase 6:** Native mobile app (steps tracking), scale
 
 ## Documentation
@@ -103,6 +107,7 @@ uv run --project backend pre-commit install
 - [Development Roadmap](docs/02_DEVELOPMENT_ROADMAP.md)
 - [Best Practices](docs/03_BEST_PRACTICES.md)
 - [Architecture Decisions (ADR-001)](docs/04_ARCHITECTURE_DECISIONS.md)
+- [Deployment Guide](docs/06_DEPLOYMENT_GUIDE.md)
 - [Progress Log](docs/PROGRESS.md)
 
 ## Medical Disclaimer

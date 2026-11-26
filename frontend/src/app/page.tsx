@@ -4,8 +4,11 @@ import Link from "next/link";
 import {
   ArrowRight,
   BellRing,
+  Check,
+  Copy,
   Dumbbell,
   MessageCircleHeart,
+  Share2,
   ShieldCheck,
   Sparkles,
   TrendingUp,
@@ -33,6 +36,11 @@ import {
   type QuickMealLogRequest,
 } from "@/lib/api";
 import { formatPatternLabel } from "@/lib/chat-helpers";
+import {
+  buildReferralShareUrl,
+  buildWhatsAppInviteUrl,
+  generateReferralCode,
+} from "@/lib/referral-helpers";
 
 export default function HomePage() {
   const { user, profileRecord, isLoading, isProfileLoading } = useAuth();
@@ -42,6 +50,7 @@ export default function HomePage() {
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [loadingDash, setLoadingDash] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [copiedInvite, setCopiedInvite] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -210,6 +219,11 @@ export default function HomePage() {
               <Button size="lg">
                 Get Started / Sign In
                 <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/welcome">
+              <Button variant="outline" size="lg">
+                Explore Landing Page
               </Button>
             </Link>
           </CardContent>
@@ -381,6 +395,71 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Referral Share Card */}
+          <Card className="border-[#0f766e]/20 bg-[#f0f7f4]/50">
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Share2 className="h-4 w-4 text-[#0f766e]" />
+                  <p className="text-sm font-semibold text-slate-900">
+                    Invite Friends to FitSoul AI
+                  </p>
+                  <Badge variant="teal" className="font-mono">
+                    {generateReferralCode(user.id)}
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-600">
+                  Apne doston ko 7-day Free Trial link share karein aur saath wellness journey
+                  karein.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const origin =
+                      typeof window !== "undefined"
+                        ? window.location.origin
+                        : "http://localhost:3000";
+                    const url = buildReferralShareUrl(origin, generateReferralCode(user.id));
+                    if (typeof navigator !== "undefined" && navigator.clipboard) {
+                      void navigator.clipboard.writeText(url);
+                    }
+                    setCopiedInvite(true);
+                    setTimeout(() => setCopiedInvite(false), 2000);
+                  }}
+                >
+                  {copiedInvite ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                  {copiedInvite ? "Copied!" : "Copy Invite Link"}
+                </Button>
+                <a
+                  href={buildWhatsAppInviteUrl(
+                    buildReferralShareUrl(
+                      typeof window !== "undefined"
+                        ? window.location.origin
+                        : "http://localhost:3000",
+                      generateReferralCode(user.id),
+                    ),
+                    user.fullName,
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button type="button" size="sm">
+                    <Share2 className="h-3.5 w-3.5" />
+                    Share on WhatsApp
+                  </Button>
+                </a>
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
 
