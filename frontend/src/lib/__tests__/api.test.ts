@@ -4,6 +4,7 @@ import {
   ApiError,
   checkHealth,
   createOrUpsertProfile,
+  generateWeeklyMealPlan,
   getChatHistory,
   getDashboard,
   getProfile,
@@ -15,6 +16,7 @@ import {
   logWeight,
   searchFoods,
   sendChatMessage,
+  swapMealPlanSlot,
   type ProfileUpsertRequest,
 } from "@/lib/api";
 import { deriveLocalUserId, isSupabaseConfigured } from "@/lib/auth";
@@ -281,6 +283,39 @@ describe("typed FastAPI client", () => {
       6,
       "http://127.0.0.1:8000/api/v1/tracking/u1/dashboard",
       expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("calls weekly meal plan and meal swap endpoints", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ days: [], grocery_list: [] }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ day_index: 0, meal_type: "lunch" }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const weekly = await generateWeeklyMealPlan("u1", 7);
+    const swapped = await swapMealPlanSlot("u1", {
+      day_index: 0,
+      meal_type: "lunch",
+      exclude_food_ids: ["daal_moong"],
+      attempt: 1,
+    });
+
+    expect(weekly.days).toEqual([]);
+    expect(swapped.meal_type).toBe("lunch");
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://127.0.0.1:8000/api/v1/meal-plans/u1/weekly?days=7",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://127.0.0.1:8000/api/v1/meal-plans/u1/swap",
+      expect.objectContaining({ method: "POST" }),
     );
   });
 });

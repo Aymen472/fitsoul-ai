@@ -157,8 +157,8 @@ export interface PatternReport {
 export interface ScaledFoodItem {
   food_id: string;
   name: string;
-  urdu_name: string;
-  serving_desc: string;
+  urdu_name?: string;
+  serving_desc?: string;
   servings: number;
   grams: number;
   kcal: number;
@@ -167,6 +167,35 @@ export interface ScaledFoodItem {
   fat: number;
   fiber: number;
   sodium_mg: number;
+}
+
+export interface GroceryItem {
+  food_id: string;
+  name: string;
+  urdu_name: string;
+  category: string;
+  total_servings: number;
+  total_grams: number;
+}
+
+export interface WeeklyMealPlan {
+  days: ValidatedMealPlan[];
+  grocery_list: GroceryItem[];
+}
+
+export interface MealSwapRequest {
+  day_index: number;
+  meal_type: "breakfast" | "lunch" | "snack" | "dinner";
+  exclude_food_ids: string[];
+  attempt: number;
+}
+
+export interface MealSwapResponse {
+  day_index: number;
+  meal_type: "breakfast" | "lunch" | "snack" | "dinner";
+  meal: ValidatedMeal;
+  updated_day: ValidatedMealPlan;
+  day_grocery_items: GroceryItem[];
 }
 
 export interface ValidatedMeal {
@@ -418,6 +447,29 @@ export async function generateDailyMealPlan(
   return requestJson<ValidatedMealPlan>(
     `/api/v1/meal-plans/${encodeURIComponent(userId)}/daily?day_index=${dayIndex}`,
     { method: "POST" },
+  );
+}
+
+export async function generateWeeklyMealPlan(
+  userId: string,
+  days = 7,
+): Promise<WeeklyMealPlan> {
+  return requestJson<WeeklyMealPlan>(
+    `/api/v1/meal-plans/${encodeURIComponent(userId)}/weekly?days=${days}`,
+    { method: "POST" },
+  );
+}
+
+export async function swapMealPlanSlot(
+  userId: string,
+  payload: MealSwapRequest,
+): Promise<MealSwapResponse> {
+  return requestJson<MealSwapResponse>(
+    `/api/v1/meal-plans/${encodeURIComponent(userId)}/swap`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
   );
 }
 

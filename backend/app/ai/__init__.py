@@ -15,6 +15,7 @@ from app.ai.intent_router import CoachIntent, classify_intent, parse_text_meal_i
 from app.ai.meal_planner import (
     AIMealPlanner,
     GroceryItem,
+    MealSwapResult,
     WeeklyMealPlan,
     build_fallback_meal_plan,
     build_grocery_list,
@@ -78,6 +79,7 @@ __all__ = [
     "MatchedMealItem",
     "MealEditItem",
     "MealPhotoScanner",
+    "MealSwapResult",
     "MemoryCategory",
     "PatternReport",
     "PatternType",
