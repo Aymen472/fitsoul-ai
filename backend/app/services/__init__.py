@@ -11,6 +11,11 @@ from app.services.notification_scheduler import (
     is_within_quiet_hours,
     run_proactive_scheduler,
 )
+from app.services.payment_gateway import (
+    CheckoutSessionResult,
+    PaymentGatewayService,
+    verify_payment_webhook_signature,
+)
 from app.services.usda_client import USDAClient, USDAClientError
 from app.services.whatsapp_client import (
     ParsedWebhookBatch,
@@ -33,7 +38,9 @@ from app.services.whatsapp_templates import (
 )
 
 __all__ = [
+    "CheckoutSessionResult",
     "ParsedWebhookBatch",
+    "PaymentGatewayService",
     "RenderedTemplateMessage",
     "SchedulePreviewResponse",
     "ScheduledNotificationJob",
@@ -58,5 +65,6 @@ __all__ = [
     "parse_webhook_events",
     "render_template_payload",
     "run_proactive_scheduler",
+    "verify_payment_webhook_signature",
     "verify_webhook_signature",
 ]

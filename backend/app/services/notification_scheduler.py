@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.ai.memory import detect_emotional_patterns
 from app.core.workouts import list_routines
 from app.db.repository import (
     MealLogRepository,
@@ -470,6 +469,9 @@ def evaluate_due_notifications_for_user(
 
     # 6. Proactive emotional pattern support (17:00-19:59)
     if _is_in_window(local_time, 17, 0, window_minutes=180):
+        # Deferred import avoids services <-> ai circular init when app.services loads first.
+        from app.ai.memory import detect_emotional_patterns
+
         cutoff_14d = reference - timedelta(days=14)
         patterns = detect_emotional_patterns(
             messages=messages_14d,

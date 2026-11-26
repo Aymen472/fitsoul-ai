@@ -289,3 +289,27 @@ class NotificationLogRow(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utc_now, onupdate=_utc_now
     )
+
+
+class PaymentTransactionRow(Base):
+    """Checkout order and webhook payment status history."""
+
+    __tablename__ = "payment_transactions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=_new_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    plan: Mapped[str] = mapped_column(String(32))
+    provider: Mapped[str] = mapped_column(String(32))
+    amount: Mapped[float] = mapped_column(Float)
+    currency: Mapped[str] = mapped_column(String(8), default="PKR")
+    status: Mapped[str] = mapped_column(String(24), default="pending")
+    provider_order_id: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    checkout_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utc_now, onupdate=_utc_now
+    )
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

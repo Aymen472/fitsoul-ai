@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.billing import PaymentProvider, PlanId, get_plan
 from app.core.nutrition import FoodItem
 from app.core.rules import NutritionTargets, get_nutrition_targets
 from app.db.tables import (
@@ -19,7 +20,9 @@ from app.db.tables import (
     NotificationLogRow,
     NotificationPreferenceRow,
     NutritionTargetRow,
+    PaymentTransactionRow,
     ProfileRow,
+    SubscriptionRow,
     UserMemoryRow,
     UserRow,
     WaterLogRow,
@@ -1170,3 +1173,277 @@ class NotificationRepository:
             and (row.payload or {}).get("slot_key") == slot_key
             for row in rows
         )
+
+
+class SubscriptionRecord(BaseModel):
+    """Persisted subscription state for a user."""
+
+    id: str
+    user_id: str
+    plan: str
+    status: str
+    provider: str | None = None
+    starts_at: datetime
+    expires_at: datetime | None = None
+    created_at: datetime
+
+
+class PaymentTransactionRecord(BaseModel):
+    """Persisted checkout order and webhook payment outcome."""
+
+    id: str
+    user_id: str
+    plan: str
+    provider: str
+    amount: float
+    currency: str
+    status: str
+    provider_order_id: str
+    checkout_url: str | None = None
+    metadata_json: dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+    paid_at: datetime | None = None
+
+
+def _to_subscription_record(row: SubscriptionRow) -> SubscriptionRecord:
+    return SubscriptionRecord(
+        id=row.id,
+        user_id=row.user_id,
+        plan=row.plan,
+        status=row.status,
+        provider=row.provider,
+        starts_at=_ensure_utc(row.starts_at),
+        expires_at=_ensure_utc(row.expires_at) if row.expires_at is not None else None,
+        created_at=_ensure_utc(row.created_at),
+    )
+
+
+def _to_payment_tx_record(row: PaymentTransactionRow) -> PaymentTransactionRecord:
+    return PaymentTransactionRecord(
+        id=row.id,
+        user_id=row.user_id,
+        plan=row.plan,
+        provider=row.provider,
+        amount=row.amount,
+        currency=row.currency,
+        status=row.status,
+        provider_order_id=row.provider_order_id,
+        checkout_url=row.checkout_url,
+        metadata_json=dict(row.metadata_json or {}),
+        created_at=_ensure_utc(row.created_at),
+        updated_at=_ensure_utc(row.updated_at),
+        paid_at=_ensure_utc(row.paid_at) if row.paid_at is not None else None,
+    )
+
+
+class SubscriptionRepository:
+    """Data-access operations for user trials, paid subscriptions, and cancellation."""
+
+    @staticmethod
+    def get_subscription(
+        session: Session,
+        user_id: str,
+        *,
+        now: datetime | None = None,
+    ) -> SubscriptionRecord | None:
+        """Fetch the subscription row for `user_id` if present."""
+        _ = now  # reserved for callers inspecting active window
+        row = session.scalar(select(SubscriptionRow).where(SubscriptionRow.user_id == user_id))
+        if row is None:
+            return None
+        return _to_subscription_record(row)
+
+    @staticmethod
+    def start_trial_if_none(
+        session: Session,
+        user_id: str,
+        *,
+        now: datetime | None = None,
+    ) -> tuple[SubscriptionRecord, bool]:
+        """Start a 7-day free trial only if the user has never held a subscription."""
+        existing = session.scalar(select(SubscriptionRow).where(SubscriptionRow.user_id == user_id))
+        if existing is not None:
+            return _to_subscription_record(existing), False
+
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+        row = SubscriptionRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            plan=PlanId.TRIAL.value,
+            status="active",
+            provider=None,
+            starts_at=reference,
+            expires_at=reference + timedelta(days=7),
+            created_at=reference,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_subscription_record(row), True
+
+    @staticmethod
+    def activate_paid_plan(
+        session: Session,
+        user_id: str,
+        plan_id: PlanId,
+        provider: PaymentProvider,
+        *,
+        now: datetime | None = None,
+    ) -> SubscriptionRecord:
+        """Activate a paid subscription or extend an active non-trial paid subscription."""
+        if plan_id == PlanId.TRIAL:
+            raise ValueError("Cannot activate trial as a paid plan")
+
+        plan_def = get_plan(plan_id)
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+
+        row = session.scalar(select(SubscriptionRow).where(SubscriptionRow.user_id == user_id))
+        if row is None:
+            row = SubscriptionRow(
+                id=str(uuid4()),
+                user_id=user_id,
+                plan=plan_def.id.value,
+                status="active",
+                provider=provider.value,
+                starts_at=reference,
+                expires_at=reference + timedelta(days=plan_def.duration_days),
+                created_at=reference,
+            )
+            session.add(row)
+        else:
+            existing_exp = _ensure_utc(row.expires_at) if row.expires_at is not None else None
+            is_active_paid = (
+                row.status == "active"
+                and row.plan != PlanId.TRIAL.value
+                and existing_exp is not None
+                and existing_exp > reference
+            )
+            base_start = existing_exp if is_active_paid and existing_exp is not None else reference
+            if not is_active_paid:
+                row.starts_at = reference
+            row.plan = plan_def.id.value
+            row.status = "active"
+            row.provider = provider.value
+            row.expires_at = base_start + timedelta(days=plan_def.duration_days)
+            session.add(row)
+
+        session.commit()
+        session.refresh(row)
+        return _to_subscription_record(row)
+
+    @staticmethod
+    def cancel_subscription(
+        session: Session,
+        user_id: str,
+        *,
+        now: datetime | None = None,
+    ) -> SubscriptionRecord | None:
+        """Mark a user's subscription as cancelled."""
+        _ = now
+        row = session.scalar(select(SubscriptionRow).where(SubscriptionRow.user_id == user_id))
+        if row is None:
+            return None
+        row.status = "cancelled"
+        session.commit()
+        session.refresh(row)
+        return _to_subscription_record(row)
+
+
+class PaymentRepository:
+    """Data-access operations for checkout orders and webhook payment transactions."""
+
+    @staticmethod
+    def create_transaction(
+        session: Session,
+        *,
+        user_id: str,
+        plan: str,
+        provider: str,
+        amount: float,
+        currency: str,
+        provider_order_id: str,
+        checkout_url: str | None,
+        metadata_json: dict[str, Any] | None = None,
+    ) -> PaymentTransactionRecord:
+        """Create a new pending payment transaction record."""
+        now = datetime.now(UTC)
+        row = PaymentTransactionRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            plan=plan,
+            provider=provider,
+            amount=float(amount),
+            currency=currency,
+            status="pending",
+            provider_order_id=provider_order_id,
+            checkout_url=checkout_url,
+            metadata_json=dict(metadata_json or {}),
+            created_at=now,
+            updated_at=now,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_payment_tx_record(row)
+
+    @staticmethod
+    def get_by_order_id(
+        session: Session,
+        provider_order_id: str,
+    ) -> PaymentTransactionRecord | None:
+        """Look up a payment transaction by its unique provider order ID."""
+        row = session.scalar(
+            select(PaymentTransactionRow).where(
+                PaymentTransactionRow.provider_order_id == provider_order_id
+            )
+        )
+        if row is None:
+            return None
+        return _to_payment_tx_record(row)
+
+    @staticmethod
+    def mark_transaction_status(
+        session: Session,
+        provider_order_id: str,
+        status: str,
+        *,
+        metadata_update: dict[str, Any] | None = None,
+        paid_at: datetime | None = None,
+    ) -> PaymentTransactionRecord | None:
+        """Update transaction status and optional payment metadata."""
+        row = session.scalar(
+            select(PaymentTransactionRow).where(
+                PaymentTransactionRow.provider_order_id == provider_order_id
+            )
+        )
+        if row is None:
+            return None
+
+        row.status = status.strip()
+        row.updated_at = datetime.now(UTC)
+        if paid_at is not None:
+            row.paid_at = _ensure_utc(paid_at)
+        if metadata_update:
+            row.metadata_json = {**dict(row.metadata_json or {}), **metadata_update}
+        session.commit()
+        session.refresh(row)
+        return _to_payment_tx_record(row)
+
+    @staticmethod
+    def list_user_transactions(
+        session: Session,
+        user_id: str,
+        *,
+        limit: int = 20,
+    ) -> list[PaymentTransactionRecord]:
+        """List payment transactions for a user ordered newest first."""
+        stmt = (
+            select(PaymentTransactionRow)
+            .where(PaymentTransactionRow.user_id == user_id)
+            .order_by(PaymentTransactionRow.created_at.desc(), PaymentTransactionRow.id.desc())
+        )
+        if limit > 0:
+            stmt = stmt.limit(limit)
+        rows = session.scalars(stmt).all()
+        return [_to_payment_tx_record(row) for row in rows]

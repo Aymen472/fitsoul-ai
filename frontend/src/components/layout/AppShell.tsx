@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BellRing,
+  CreditCard,
   Dumbbell,
   HeartPulse,
   Home,
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
 
 const DESKTOP_EXTRA_NAV = [
   { href: "/notifications", label: "Reminders", icon: BellRing },
+  { href: "/billing", label: "Billing", icon: CreditCard },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -140,6 +142,18 @@ export function AppShell({ children }: { children: ReactNode }) {
               )}
             >
               <BellRing className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/billing"
+              aria-label="Subscription and Billing"
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+                pathname === "/billing"
+                  ? "bg-[#f0f7f4] text-[#0f766e]"
+                  : "text-slate-600 hover:bg-slate-100",
+              )}
+            >
+              <CreditCard className="h-4 w-4" />
             </Link>
             {user ? (
               <Button variant="ghost" size="sm" onClick={handleSignOut}>

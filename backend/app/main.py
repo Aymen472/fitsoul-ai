@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.billing import router as billing_router
 from app.api.chat import router as chat_router
 from app.api.health import router as health_router
 from app.api.profiles import router as profiles_router
@@ -43,6 +44,7 @@ def create_app(initialize_db: bool = True) -> FastAPI:
     application.include_router(chat_router)
     application.include_router(tracking_router)
     application.include_router(whatsapp_router)
+    application.include_router(billing_router)
     return application
 
 
