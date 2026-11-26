@@ -7,7 +7,13 @@ import {
   confirmSandboxPayment,
   createBillingCheckout,
   createOrUpsertProfile,
+  deleteAdminFood,
+  deleteUserAccountData,
   generateWeeklyMealPlan,
+  getAdminFlaggedMessages,
+  getAdminFoods,
+  getAdminOverview,
+  getAdminUsers,
   getBillingPlans,
   getBillingStatus,
   getChatHistory,
@@ -32,6 +38,7 @@ import {
   startFreeTrial,
   swapMealPlanSlot,
   updateNotificationPreferences,
+  upsertAdminFood,
   type ProfileUpsertRequest,
 } from "@/lib/api";
 import { deriveLocalUserId, isSupabaseConfigured } from "@/lib/auth";
@@ -554,6 +561,80 @@ describe("typed FastAPI client", () => {
       6,
       "http://127.0.0.1:8000/api/v1/billing/u1/cancel",
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("calls admin overview, users, flagged messages, food CRUD, and data deletion endpoints", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ total_users: 2 }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "custom_daal", name: "Custom Daal" }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ deleted: true, food_id: "custom_daal" }), { status: 200 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ user_id: "u1", deleted: true, records_removed: { users: 1 } }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const ov = await getAdminOverview("ops-key");
+    await getAdminUsers("ops-key", 25);
+    await getAdminFlaggedMessages("ops-key", 25);
+    await getAdminFoods({ query: "daal", limit: 10, adminKey: "ops-key" });
+    const food = await upsertAdminFood(
+      "custom_daal",
+      {
+        name: "Custom Daal",
+        urdu_name: "",
+        aliases: [],
+        category: "lentils",
+        serving_desc: "1 cup",
+        grams: 150,
+        kcal: 180,
+        protein: 10,
+        carbs: 28,
+        fat: 2,
+        fiber: 6,
+        sodium_mg: 200,
+        gi_category: "low",
+        tags: ["desi"],
+      },
+      "ops-key",
+    );
+    const delFood = await deleteAdminFood("custom_daal", "ops-key");
+    const delAccount = await deleteUserAccountData("u1");
+
+    expect(ov.total_users).toBe(2);
+    expect(food.id).toBe("custom_daal");
+    expect(delFood.deleted).toBe(true);
+    expect(delAccount.deleted).toBe(true);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://127.0.0.1:8000/api/v1/admin/overview",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({ "X-Admin-Key": "ops-key" }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "http://127.0.0.1:8000/api/v1/admin/foods?q=daal&limit=10",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      7,
+      "http://127.0.0.1:8000/api/v1/profiles/u1/data",
+      expect.objectContaining({ method: "DELETE" }),
     );
   });
 });

@@ -6,11 +6,13 @@ import {
   BellRing,
   CreditCard,
   Dumbbell,
+  FileText,
   HeartPulse,
   Home,
   LogIn,
   LogOut,
   MessageCircleHeart,
+  Shield,
   UserCheck,
   Utensils,
 } from "lucide-react";
@@ -32,6 +34,8 @@ const NAV_ITEMS = [
 const DESKTOP_EXTRA_NAV = [
   { href: "/notifications", label: "Reminders", icon: BellRing },
   { href: "/billing", label: "Billing", icon: CreditCard },
+  { href: "/admin", label: "Admin", icon: Shield },
+  { href: "/legal", label: "Legal", icon: FileText },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -114,7 +118,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           )}
           <p className="text-[11px] leading-relaxed text-slate-400">
-            Wellness guidance only — not a substitute for professional medical advice.
+            Wellness guidance only — not medical advice.{" "}
+            <Link href="/legal" className="text-[#0f766e] underline hover:text-[#115e59]">
+              Privacy, Terms &amp; Disclaimer
+            </Link>
           </p>
         </div>
       </aside>

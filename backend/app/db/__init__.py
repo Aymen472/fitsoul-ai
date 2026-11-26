@@ -11,8 +11,12 @@ from app.db.database import (
     normalize_database_url,
 )
 from app.db.repository import (
+    AdminOverviewMetrics,
+    AdminRepository,
+    AdminUserSummary,
     DailyMealSummary,
     DailyWaterSummary,
+    FlaggedMessageRecord,
     MealLogRecord,
     MealLogRepository,
     MemoryRepository,
@@ -29,6 +33,7 @@ from app.db.repository import (
     ProfileRepository,
     SubscriptionRecord,
     SubscriptionRepository,
+    UserDeletionSummary,
     UserMemoryRecord,
     WaterLogRecord,
     WaterLogRepository,
@@ -57,10 +62,14 @@ from app.db.tables import (
 )
 
 __all__ = [
+    "AdminOverviewMetrics",
+    "AdminRepository",
+    "AdminUserSummary",
     "Base",
     "DEFAULT_SQLITE_URL",
     "DailyMealSummary",
     "DailyWaterSummary",
+    "FlaggedMessageRecord",
     "FoodRow",
     "MealLogRecord",
     "MealLogRepository",
@@ -87,6 +96,7 @@ __all__ = [
     "SubscriptionRecord",
     "SubscriptionRepository",
     "SubscriptionRow",
+    "UserDeletionSummary",
     "UserMemoryRecord",
     "UserMemoryRow",
     "UserRow",

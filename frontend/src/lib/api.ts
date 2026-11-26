@@ -525,6 +525,74 @@ export interface PaymentWebhookAckResponse {
   subscription: SubscriptionRecord | null;
 }
 
+export interface AdminOverviewMetrics {
+  total_users: number;
+  total_profiles: number;
+  active_subscriptions: number;
+  trial_subscriptions: number;
+  paid_subscriptions: number;
+  revenue_pkr: number;
+  revenue_usd: number;
+  flagged_safety_count: number;
+  total_messages: number;
+  estimated_ai_cost_usd: number;
+  avg_ai_cost_per_user_usd: number;
+  total_foods: number;
+}
+
+export interface AdminUserSummary {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  goal: string | null;
+  is_high_risk: boolean;
+  subscription_plan: string | null;
+  subscription_status: string;
+  message_count: number;
+  flagged_count: number;
+  estimated_ai_cost_usd: number;
+  created_at: string;
+}
+
+export interface FlaggedMessageRecord {
+  id: string;
+  user_id: string;
+  user_full_name: string | null;
+  user_email: string | null;
+  role: string;
+  content: string;
+  channel: string;
+  created_at: string;
+}
+
+export interface AdminFoodItem {
+  id: string;
+  name: string;
+  urdu_name: string;
+  aliases: string[];
+  category: string;
+  serving_desc: string;
+  grams: number;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sodium_mg: number;
+  gi_category: "low" | "medium" | "high";
+  tags: string[];
+}
+
+export type AdminFoodUpsertPayload = Omit<AdminFoodItem, "id">;
+
+export interface UserDeletionSummary {
+  user_id: string;
+  deleted: boolean;
+  records_removed: Record<string, number>;
+  deleted_at: string;
+}
+
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"
 ).replace(/\/+$/, "");
@@ -905,5 +973,93 @@ export async function confirmSandboxPayment(
       method: "POST",
       body: JSON.stringify(payload),
     },
+  );
+}
+
+function buildAdminHeaders(adminKey?: string): Record<string, string> {
+  const cleaned = adminKey?.trim() ?? "";
+  return cleaned ? { "X-Admin-Key": cleaned } : {};
+}
+
+export async function getAdminOverview(adminKey?: string): Promise<AdminOverviewMetrics> {
+  return requestJson<AdminOverviewMetrics>("/api/v1/admin/overview", {
+    method: "GET",
+    headers: buildAdminHeaders(adminKey),
+  });
+}
+
+export async function getAdminUsers(
+  adminKey?: string,
+  limit = 50,
+): Promise<AdminUserSummary[]> {
+  return requestJson<AdminUserSummary[]>(`/api/v1/admin/users?limit=${limit}`, {
+    method: "GET",
+    headers: buildAdminHeaders(adminKey),
+  });
+}
+
+export async function getAdminFlaggedMessages(
+  adminKey?: string,
+  limit = 50,
+): Promise<FlaggedMessageRecord[]> {
+  return requestJson<FlaggedMessageRecord[]>(`/api/v1/admin/flagged-messages?limit=${limit}`, {
+    method: "GET",
+    headers: buildAdminHeaders(adminKey),
+  });
+}
+
+export async function getAdminFoods(options?: {
+  query?: string;
+  category?: string;
+  limit?: number;
+  adminKey?: string;
+}): Promise<AdminFoodItem[]> {
+  const params = new URLSearchParams();
+  if (options?.query) {
+    params.set("q", options.query);
+  }
+  if (options?.category) {
+    params.set("category", options.category);
+  }
+  if (options?.limit !== undefined) {
+    params.set("limit", String(options.limit));
+  }
+  const qs = params.toString();
+  const path = qs ? `/api/v1/admin/foods?${qs}` : "/api/v1/admin/foods";
+  return requestJson<AdminFoodItem[]>(path, {
+    method: "GET",
+    headers: buildAdminHeaders(options?.adminKey),
+  });
+}
+
+export async function upsertAdminFood(
+  foodId: string,
+  payload: AdminFoodUpsertPayload,
+  adminKey?: string,
+): Promise<AdminFoodItem> {
+  return requestJson<AdminFoodItem>(`/api/v1/admin/foods/${encodeURIComponent(foodId)}`, {
+    method: "PUT",
+    headers: buildAdminHeaders(adminKey),
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteAdminFood(
+  foodId: string,
+  adminKey?: string,
+): Promise<{ deleted: boolean; food_id: string }> {
+  return requestJson<{ deleted: boolean; food_id: string }>(
+    `/api/v1/admin/foods/${encodeURIComponent(foodId)}`,
+    {
+      method: "DELETE",
+      headers: buildAdminHeaders(adminKey),
+    },
+  );
+}
+
+export async function deleteUserAccountData(userId: string): Promise<UserDeletionSummary> {
+  return requestJson<UserDeletionSummary>(
+    `/api/v1/profiles/${encodeURIComponent(userId)}/data`,
+    { method: "DELETE" },
   );
 }
