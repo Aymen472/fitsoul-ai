@@ -27,6 +27,8 @@ from app.db.repository import (
     WaterLogRepository,
     WeightLogRecord,
     WeightLogRepository,
+    WorkoutLogRecord,
+    WorkoutRepository,
 )
 from app.db.tables import (
     FoodRow,
@@ -73,6 +75,8 @@ __all__ = [
     "WeightLogRecord",
     "WeightLogRepository",
     "WeightLogRow",
+    "WorkoutLogRecord",
+    "WorkoutRepository",
     "WorkoutRow",
     "create_db_engine",
     "get_db",

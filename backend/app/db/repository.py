@@ -21,6 +21,7 @@ from app.db.tables import (
     UserRow,
     WaterLogRow,
     WeightLogRow,
+    WorkoutRow,
 )
 from app.models import (
     ActivityLevel,
@@ -716,6 +717,92 @@ class WeightLogRepository:
         rows = session.scalars(stmt).all()
         filtered = [
             _to_weight_log_record(row) for row in rows if _ensure_utc(row.logged_at) >= cutoff
+        ]
+        if limit > 0 and len(filtered) > limit:
+            return filtered[-limit:]
+        return filtered
+
+
+class WorkoutLogRecord(BaseModel):
+    """Persisted completed workout or face yoga session."""
+
+    id: str
+    user_id: str
+    routine_name: str
+    workout_type: str
+    duration_minutes: int
+    calories_burned: float
+    completed_at: datetime
+
+
+def _to_workout_log_record(row: WorkoutRow) -> WorkoutLogRecord:
+    return WorkoutLogRecord(
+        id=row.id,
+        user_id=row.user_id,
+        routine_name=row.routine_name,
+        workout_type=row.workout_type,
+        duration_minutes=row.duration_minutes,
+        calories_burned=row.calories_burned,
+        completed_at=_ensure_utc(row.completed_at),
+    )
+
+
+class WorkoutRepository:
+    """Data-access operations for completed fitness and face yoga sessions."""
+
+    @staticmethod
+    def save_workout(
+        session: Session,
+        user_id: str,
+        routine_name: str,
+        workout_type: str,
+        duration_minutes: int,
+        calories_burned: float,
+        *,
+        completed_at: datetime | None = None,
+    ) -> WorkoutLogRecord:
+        """Persist a completed workout or face yoga session."""
+        if duration_minutes <= 0:
+            raise ValueError("duration_minutes must be positive")
+        if calories_burned < 0:
+            raise ValueError("calories_burned cannot be negative")
+
+        timestamp = _ensure_utc(completed_at) if completed_at is not None else datetime.now(UTC)
+        row = WorkoutRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            routine_name=routine_name.strip(),
+            workout_type=workout_type.strip(),
+            duration_minutes=duration_minutes,
+            calories_burned=round(float(calories_burned), 1),
+            completed_at=timestamp,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_workout_log_record(row)
+
+    @staticmethod
+    def get_recent_workouts(
+        session: Session,
+        user_id: str,
+        *,
+        days: int = 30,
+        limit: int = 30,
+        now: datetime | None = None,
+    ) -> list[WorkoutLogRecord]:
+        """Fetch recent completed workouts ordered chronologically."""
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+        cutoff = reference - timedelta(days=days)
+
+        stmt = (
+            select(WorkoutRow)
+            .where(WorkoutRow.user_id == user_id)
+            .order_by(WorkoutRow.completed_at.asc(), WorkoutRow.id.asc())
+        )
+        rows = session.scalars(stmt).all()
+        filtered = [
+            _to_workout_log_record(row) for row in rows if _ensure_utc(row.completed_at) >= cutoff
         ]
         if limit > 0 and len(filtered) > limit:
             return filtered[-limit:]

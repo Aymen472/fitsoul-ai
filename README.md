@@ -92,7 +92,7 @@ uv run --project backend pre-commit install
 - [x] **Phase 0:** Repo setup, FastAPI `/health`, ruff, pytest, pre-commit, CI
 - [x] **Phase 1:** Deterministic nutrition engine, Pakistani food DB, user profile, Supabase schema
 - [x] **Phase 2:** AI brain (meal planner + validator, photo scanner, safety guardrails, coach persona, long-term memory & pattern detector)
-- [ ] **Phase 3:** Next.js PWA (auth, chat with history, dashboard, workout & face yoga player)
+- [x] **Phase 3:** Next.js PWA (auth, chat with history, dashboard, workout & face yoga player)
 - [ ] **Phase 4:** WhatsApp notifications (webhook, approved templates, scheduler)
 - [ ] **Phase 5:** Payments, admin panel, beta launch
 - [ ] **Phase 6:** Native mobile app (steps tracking), scale

@@ -21,9 +21,10 @@
 - [x] Module 3.2: Live AI Coach Chat UI with persistent history, quick prompts, safety/care alerts & long-term memory/pattern insights (`GET /api/v1/chat/{user_id}/memories`)
 - [x] Module 3.3: Daily tracking REST APIs (`water_logs`, `weight_logs`, `mood_logs`, `meal_logs`, `foods/search`, `dashboard`) & interactive Wellness Dashboard (Calorie ring, macros, water, weight chart, desi quick-logger)
 - [x] Module 3.4: Weekly Pakistani Meal Plan (`POST /api/v1/meal-plans/{user_id}/weekly`), compliant Meal Swap (`POST /api/v1/meal-plans/{user_id}/swap`) & interactive 7-day Grocery List UI (`/plan`)
+- [x] Module 3.5: Workout & Face Yoga library (`core/workouts/`), MET calorie burn logging (`POST/GET /tracking/{user_id}/workouts`) & Guided Timer Player UI (`/workouts`) (**Phase 3 Complete!**)
 
 ## Next step
-Start Phase 3 — Module 3.5 (Workout & Face Yoga Guided Timer Player + Progress Logging) on branch `feat/pwa-workouts`.
+Start Phase 4 — Module 4.1 (Meta WhatsApp Cloud API Webhook, Signature Verification & Template Notifications) on branch `feat/whatsapp-notifications` (per ADR-001: Notifications + deep links back to PWA).
 
 ## Log
 | Date | Module | What was built | Concepts learned |
@@ -46,3 +47,4 @@ Start Phase 3 — Module 3.5 (Workout & Face Yoga Guided Timer Player + Progress
 | 2026-11-25 | Module 3.2 | `GET /api/v1/chat/{user_id}/memories` (`app/api/chat.py`), chat helpers & tests (`chat-helpers.ts`), live `/chat` workspace (`ChatMessageBubble.tsx`, `CoachInsightsPanel.tsx`, `app/chat/page.tsx`) | Optimistic UI chat flow, `Promise.allSettled` workspace hydration, memory/pattern badges, safety care banners |
 | 2026-11-25 | Module 3.3 | `WaterLogRepository` & `WeightLogRepository` (`app/db/repository.py`), tracking & dashboard APIs (`app/api/tracking.py`, `tests/test_tracking_api.py`), interactive Dashboard UI (`CalorieRingCard`, `HydrationMoodCard`, `WeightTrendCard`, `MealLoggerHistoryCard`, `app/page.tsx`, `dashboard-helpers.ts`) | Timezone-aware daily aggregation, consecutive activity streak logic, custom SVG progress ring & sparkline charts, debounced Food DB meal logger |
 | 2026-11-26 | Module 3.4 | `AIMealPlanner.swap_meal_day` (`app/ai/meal_planner.py`), `/weekly` & `/swap` endpoints (`app/api/chat.py`), 7-day `/plan` UI (`MealSlotCard`, `GroceryListPanel`, `meal-plan-helpers.ts`), unit & API tests | Rule-compliant meal swapping with fallback rotation, client-side weekly grocery recalculation & aisle grouping, localStorage checklist persistence |
+| 2026-11-26 | Module 3.5 | Workout & Face Yoga library + MET calculator (`app/core/workouts/`), `WorkoutRepository` (`app/db/repository.py`), workout routes & streak hook (`app/api/tracking.py`), Guided Timer Player (`GuidedWorkoutPlayer.tsx`, `app/workouts/page.tsx`, `workout-helpers.ts`), tests (`tests/test_workouts_api.py`, `workout-helpers.test.ts`) | MET-based calorie burn (`MET * kg * hours`), contraindication filtering, React 19 strict-safe countdown state machine, Web Speech API cues |

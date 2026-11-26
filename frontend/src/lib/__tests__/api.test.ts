@@ -10,10 +10,13 @@ import {
   getProfile,
   getUserMemories,
   getUserPatterns,
+  getWorkoutHistory,
+  getWorkoutRoutines,
   logMood,
   logQuickMeal,
   logWater,
   logWeight,
+  logWorkout,
   searchFoods,
   sendChatMessage,
   swapMealPlanSlot,
@@ -316,6 +319,42 @@ describe("typed FastAPI client", () => {
       2,
       "http://127.0.0.1:8000/api/v1/meal-plans/u1/swap",
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("calls workout routines, workout log, and workout history endpoints", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "wk-1", calories_burned: 75 }), { status: 201 }),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getWorkoutRoutines({ workoutType: "face_yoga", avoid: ["neck"] });
+    const logged = await logWorkout("u1", {
+      routine_id: "pcos_low_impact_cardio",
+      duration_minutes: 15,
+    });
+    const history = await getWorkoutHistory("u1", 30);
+
+    expect(logged.calories_burned).toBe(75);
+    expect(history).toEqual([]);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://127.0.0.1:8000/api/v1/workouts/routines?workout_type=face_yoga&avoid=neck",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://127.0.0.1:8000/api/v1/tracking/u1/workouts",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "http://127.0.0.1:8000/api/v1/tracking/u1/workouts?days=30",
+      expect.objectContaining({ method: "GET" }),
     );
   });
 });

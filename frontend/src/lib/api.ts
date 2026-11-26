@@ -284,6 +284,49 @@ export interface MoodLogRecord {
   logged_at: string;
 }
 
+export interface WorkoutStep {
+  id: string;
+  name: string;
+  instructions: string;
+  duration_sec: number;
+  rest_sec: number;
+  muscle_groups: string[];
+  contraindications: string[];
+  easier_alternative_name: string | null;
+  easier_alternative_instructions: string | null;
+}
+
+export interface WorkoutRoutine {
+  id: string;
+  name: string;
+  urdu_subtitle: string;
+  workout_type: "fitness" | "face_yoga";
+  level: "beginner" | "intermediate";
+  duration_minutes: number;
+  met_value: number;
+  focus_areas: string[];
+  contraindications: string[];
+  description: string;
+  steps: WorkoutStep[];
+}
+
+export interface WorkoutLogRequest {
+  routine_id?: string;
+  routine_name?: string;
+  workout_type?: "fitness" | "face_yoga";
+  duration_minutes: number;
+}
+
+export interface WorkoutLogRecord {
+  id: string;
+  user_id: string;
+  routine_name: string;
+  workout_type: string;
+  duration_minutes: number;
+  calories_burned: number;
+  completed_at: string;
+}
+
 export interface DashboardSummary {
   user_id: string;
   date: string;
@@ -531,5 +574,44 @@ export async function logMood(
       method: "POST",
       body: JSON.stringify({ mood, note: note?.trim() ? note.trim() : null }),
     },
+  );
+}
+
+export async function getWorkoutRoutines(options?: {
+  workoutType?: "fitness" | "face_yoga";
+  avoid?: string[];
+}): Promise<WorkoutRoutine[]> {
+  const params = new URLSearchParams();
+  if (options?.workoutType) {
+    params.set("workout_type", options.workoutType);
+  }
+  if (options?.avoid && options.avoid.length > 0) {
+    params.set("avoid", options.avoid.join(","));
+  }
+  const qs = params.toString();
+  const path = qs ? `/api/v1/workouts/routines?${qs}` : "/api/v1/workouts/routines";
+  return requestJson<WorkoutRoutine[]>(path, { method: "GET" });
+}
+
+export async function logWorkout(
+  userId: string,
+  payload: WorkoutLogRequest,
+): Promise<WorkoutLogRecord> {
+  return requestJson<WorkoutLogRecord>(
+    `/api/v1/tracking/${encodeURIComponent(userId)}/workouts`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function getWorkoutHistory(
+  userId: string,
+  days = 30,
+): Promise<WorkoutLogRecord[]> {
+  return requestJson<WorkoutLogRecord[]>(
+    `/api/v1/tracking/${encodeURIComponent(userId)}/workouts?days=${days}`,
+    { method: "GET" },
   );
 }
