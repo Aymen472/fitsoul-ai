@@ -12,13 +12,15 @@ from app.ai import (
     ChatTurn,
     CoachAgent,
     CoachIntent,
+    MealSwapResult,
     PatternReport,
+    WeeklyMealPlan,
     compute_text_embedding,
     detect_emotional_patterns,
     extract_memory_facts,
     retrieve_relevant_memories,
 )
-from app.core.safety import SafetyCategory, ValidatedMealPlan
+from app.core.safety import MealType, SafetyCategory, ValidatedMealPlan
 from app.db import (
     MealLogRepository,
     MemoryRepository,
@@ -85,6 +87,15 @@ class ChatMemoriesResponse(BaseModel):
 
     user_id: str
     memories: list[UserMemoryRecord]
+
+
+class MealSwapRequest(BaseModel):
+    """Request payload for swapping a meal slot with a fresh desi alternative."""
+
+    day_index: int = Field(default=0, ge=0, le=30)
+    meal_type: MealType
+    exclude_food_ids: list[str] = Field(default_factory=list, max_length=20)
+    attempt: int = Field(default=1, ge=1, le=20)
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -237,3 +248,39 @@ def generate_daily_meal_plan(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
 
     return planner.generate_daily_plan(record.profile, day_index=day_index)
+
+
+@router.post("/meal-plans/{user_id}/weekly", response_model=WeeklyMealPlan)
+def generate_weekly_meal_plan(
+    user_id: str,
+    db: DbSession,
+    planner: MealPlannerDep,
+    days: int = Query(default=7, ge=1, le=7),
+) -> WeeklyMealPlan:
+    """Generate a multi-day validated Pakistani meal plan and consolidated grocery list."""
+    record = ProfileRepository.get_profile(db, user_id)
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+
+    return planner.generate_weekly_plan(record.profile, days=days)
+
+
+@router.post("/meal-plans/{user_id}/swap", response_model=MealSwapResult)
+def swap_meal_plan_slot(
+    user_id: str,
+    payload: MealSwapRequest,
+    db: DbSession,
+    planner: MealPlannerDep,
+) -> MealSwapResult:
+    """Swap a meal slot in a day's plan while preserving all clinical nutrition limits."""
+    record = ProfileRepository.get_profile(db, user_id)
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+
+    return planner.swap_meal_day(
+        record.profile,
+        meal_type=payload.meal_type,
+        day_index=payload.day_index,
+        exclude_food_ids=payload.exclude_food_ids,
+        attempt=payload.attempt,
+    )

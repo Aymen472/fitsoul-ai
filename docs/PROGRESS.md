@@ -20,9 +20,10 @@
 - [x] Module 3.1: Next.js 15 PWA setup (manifest, icons, service worker), Tailwind v4 UI shell, hybrid Auth (Supabase + local dev), live Health Onboarding wired to FastAPI + CORS & Frontend CI
 - [x] Module 3.2: Live AI Coach Chat UI with persistent history, quick prompts, safety/care alerts & long-term memory/pattern insights (`GET /api/v1/chat/{user_id}/memories`)
 - [x] Module 3.3: Daily tracking REST APIs (`water_logs`, `weight_logs`, `mood_logs`, `meal_logs`, `foods/search`, `dashboard`) & interactive Wellness Dashboard (Calorie ring, macros, water, weight chart, desi quick-logger)
+- [x] Module 3.4: Weekly Pakistani Meal Plan (`POST /api/v1/meal-plans/{user_id}/weekly`), compliant Meal Swap (`POST /api/v1/meal-plans/{user_id}/swap`) & interactive 7-day Grocery List UI (`/plan`)
 
 ## Next step
-Start Phase 3 — Module 3.4 (Weekly Meal Plan, Meal Swap & Interactive Grocery List) on branch `feat/pwa-meal-plan`.
+Start Phase 3 — Module 3.5 (Workout & Face Yoga Guided Timer Player + Progress Logging) on branch `feat/pwa-workouts`.
 
 ## Log
 | Date | Module | What was built | Concepts learned |
@@ -44,3 +45,4 @@ Start Phase 3 — Module 3.4 (Weekly Meal Plan, Meal Swap & Interactive Grocery 
 | 2026-11-25 | Module 3.1 | Next.js 15 PWA shell (`frontend/src/app/`, `manifest.ts`, `sw.js`, SVG icons), hybrid auth (`Supabase` + local dev), live Health Onboarding wired to FastAPI + CORS (`app/config.py`, `app/main.py`), Vitest tests & frontend CI job (`.github/workflows/ci.yml`) | Next.js App Router PWA fundamentals, Tailwind v4 tokens, FastAPI `CORSMiddleware`, hybrid auth state management, typed REST error handling |
 | 2026-11-25 | Module 3.2 | `GET /api/v1/chat/{user_id}/memories` (`app/api/chat.py`), chat helpers & tests (`chat-helpers.ts`), live `/chat` workspace (`ChatMessageBubble.tsx`, `CoachInsightsPanel.tsx`, `app/chat/page.tsx`) | Optimistic UI chat flow, `Promise.allSettled` workspace hydration, memory/pattern badges, safety care banners |
 | 2026-11-25 | Module 3.3 | `WaterLogRepository` & `WeightLogRepository` (`app/db/repository.py`), tracking & dashboard APIs (`app/api/tracking.py`, `tests/test_tracking_api.py`), interactive Dashboard UI (`CalorieRingCard`, `HydrationMoodCard`, `WeightTrendCard`, `MealLoggerHistoryCard`, `app/page.tsx`, `dashboard-helpers.ts`) | Timezone-aware daily aggregation, consecutive activity streak logic, custom SVG progress ring & sparkline charts, debounced Food DB meal logger |
+| 2026-11-26 | Module 3.4 | `AIMealPlanner.swap_meal_day` (`app/ai/meal_planner.py`), `/weekly` & `/swap` endpoints (`app/api/chat.py`), 7-day `/plan` UI (`MealSlotCard`, `GroceryListPanel`, `meal-plan-helpers.ts`), unit & API tests | Rule-compliant meal swapping with fallback rotation, client-side weekly grocery recalculation & aisle grouping, localStorage checklist persistence |

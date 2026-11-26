@@ -14,6 +14,7 @@ from app.core.safety import (
     MealType,
     PlannedMealItem,
     RawDailyMealPlan,
+    ValidatedMeal,
     ValidatedMealPlan,
     validate_meal_plan,
 )
@@ -43,6 +44,16 @@ class WeeklyMealPlan(BaseModel):
 
     days: list[ValidatedMealPlan]
     grocery_list: list[GroceryItem]
+
+
+class MealSwapResult(BaseModel):
+    """Validated replacement meal alongside updated daily totals and grocery items."""
+
+    day_index: int
+    meal_type: MealType
+    meal: ValidatedMeal
+    updated_day: ValidatedMealPlan
+    day_grocery_items: list[GroceryItem]
 
 
 def build_grocery_list(
@@ -538,3 +549,89 @@ class AIMealPlanner:
         ]
         grocery = build_grocery_list(daily_plans, self.food_db)
         return WeeklyMealPlan(days=daily_plans, grocery_list=grocery)
+
+    @staticmethod
+    def _validate_candidate_day(
+        profile: UserProfile,
+        targets: NutritionTargets,
+        foods: list[FoodItem],
+        day_index: int,
+    ) -> ValidatedMealPlan | None:
+        if not foods:
+            return None
+        try:
+            raw = build_fallback_meal_plan(profile, targets, foods, day_index=day_index)
+        except ValueError:
+            return None
+        validation = validate_meal_plan(
+            raw,
+            profile,
+            targets,
+            foods,
+            used_fallback=True,
+            attempts_used=1,
+        )
+        return validation.validated_plan if validation.is_valid else None
+
+    def swap_meal_day(
+        self,
+        profile: UserProfile,
+        *,
+        meal_type: MealType,
+        day_index: int = 0,
+        exclude_food_ids: list[str] | None = None,
+        attempt: int = 1,
+        today: date | None = None,
+    ) -> MealSwapResult:
+        """Generate a valid alternative day plan aiming to replace `meal_type` foods."""
+        targets = get_nutrition_targets(profile, today=today)
+        allowed_foods = self.food_db.filter_for_targets(
+            targets,
+            diet_type=profile.diet_type,
+            allergies=profile.allergies,
+            dislikes=profile.dislikes,
+        )
+        excluded = {fid.strip() for fid in (exclude_food_ids or []) if fid.strip()}
+
+        preferred_foods = [food for food in allowed_foods if food.id not in excluded]
+        validated = self._validate_candidate_day(
+            profile, targets, preferred_foods, day_index + attempt * 3 + 1
+        )
+
+        if validated is None:
+            best_plan: ValidatedMealPlan | None = None
+            best_overlap: int | None = None
+            for offset in (
+                day_index + attempt * 5 + 2,
+                day_index + attempt * 7 + 3,
+                day_index + attempt + 1,
+            ):
+                candidate = self._validate_candidate_day(profile, targets, allowed_foods, offset)
+                if candidate is None:
+                    continue
+                meal_ids = {
+                    item.food_id
+                    for meal in candidate.meals
+                    if meal.meal_type == meal_type
+                    for item in meal.items
+                }
+                overlap = len(meal_ids & excluded)
+                if best_plan is None or best_overlap is None or overlap < best_overlap:
+                    best_plan = candidate
+                    best_overlap = overlap
+                if overlap == 0:
+                    break
+            validated = best_plan
+
+        if validated is None:
+            raise RuntimeError("Unable to find a valid alternative meal plan for this profile.")
+
+        swapped_meal = next(m for m in validated.meals if m.meal_type == meal_type)
+        day_grocery = build_grocery_list([validated], self.food_db)
+        return MealSwapResult(
+            day_index=day_index,
+            meal_type=meal_type,
+            meal=swapped_meal,
+            updated_day=validated,
+            day_grocery_items=day_grocery,
+        )

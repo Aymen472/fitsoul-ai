@@ -584,6 +584,46 @@ def test_patterns_and_daily_meal_plan_endpoints(
     assert plan["total_protein_g"] >= 103
 
 
+def test_weekly_meal_plan_and_meal_swap_endpoints(
+    api_harness: tuple[TestClient, sessionmaker[Session], list[str]],
+) -> None:
+    client, _, _ = api_harness
+    _create_pcos_profile(client, "weekly-user")
+
+    weekly_resp = client.post("/api/v1/meal-plans/weekly-user/weekly?days=7")
+    assert weekly_resp.status_code == 200
+    weekly = weekly_resp.json()
+    assert len(weekly["days"]) == 7
+    assert len(weekly["grocery_list"]) >= 4
+
+    for day in weekly["days"]:
+        assert 1376 * 0.95 <= day["total_kcal"] <= 1376 * 1.05
+        assert day["total_protein_g"] >= 103
+
+    day0_lunch = next(m for m in weekly["days"][0]["meals"] if m["meal_type"] == "lunch")
+    lunch_ids = [item["food_id"] for item in day0_lunch["items"]]
+
+    swap_resp = client.post(
+        "/api/v1/meal-plans/weekly-user/swap",
+        json={
+            "day_index": 0,
+            "meal_type": "lunch",
+            "exclude_food_ids": lunch_ids,
+            "attempt": 1,
+        },
+    )
+    assert swap_resp.status_code == 200
+    swapped = swap_resp.json()
+    assert swapped["day_index"] == 0
+    assert swapped["meal_type"] == "lunch"
+    assert swapped["meal"]["meal_type"] == "lunch"
+    assert len(swapped["day_grocery_items"]) >= 1
+    assert 1376 * 0.95 <= swapped["updated_day"]["total_kcal"] <= 1376 * 1.05
+    assert swapped["updated_day"]["total_protein_g"] >= 103
+    swapped_ids = [item["food_id"] for item in swapped["meal"]["items"]]
+    assert swapped_ids != lunch_ids
+
+
 def test_chat_and_meal_plan_endpoints_return_404_for_unknown_user(
     api_harness: tuple[TestClient, sessionmaker[Session], list[str]],
 ) -> None:
@@ -600,3 +640,11 @@ def test_chat_and_meal_plan_endpoints_return_404_for_unknown_user(
     assert client.get("/api/v1/chat/missing-user/memories").status_code == 404
     assert client.get("/api/v1/chat/missing-user/patterns").status_code == 404
     assert client.post("/api/v1/meal-plans/missing-user/daily").status_code == 404
+    assert client.post("/api/v1/meal-plans/missing-user/weekly").status_code == 404
+    assert (
+        client.post(
+            "/api/v1/meal-plans/missing-user/swap",
+            json={"day_index": 0, "meal_type": "lunch"},
+        ).status_code
+        == 404
+    )
