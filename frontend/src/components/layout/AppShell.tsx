@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { user, signOut } = useAuth();
 
-  if (pathname === "/login") {
+  if (pathname === "/login" || pathname === "/welcome") {
     return (
       <div className="min-h-screen bg-[#fafaf7] text-slate-900">
         {children}
