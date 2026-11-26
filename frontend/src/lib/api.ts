@@ -348,6 +348,98 @@ export interface DashboardSummary {
   patterns: PatternReport;
 }
 
+export interface WhatsAppTemplateDefinition {
+  name: string;
+  category: string;
+  language_code: string;
+  required_params: string[];
+  default_path: string;
+  preview_body: string;
+}
+
+export interface NotificationPreferences {
+  user_id: string;
+  whatsapp_opt_in: boolean;
+  whatsapp_phone: string | null;
+  meal_reminders: boolean;
+  water_reminders: boolean;
+  workout_reminders: boolean;
+  night_summary: boolean;
+  weekly_report: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+  updated_at?: string | null;
+}
+
+export interface NotificationPreferencesUpdate {
+  whatsapp_opt_in: boolean;
+  whatsapp_phone: string | null;
+  meal_reminders: boolean;
+  water_reminders: boolean;
+  workout_reminders: boolean;
+  night_summary: boolean;
+  weekly_report: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+}
+
+export interface NotificationLogEntry {
+  id: string;
+  user_id: string | null;
+  channel: string;
+  direction: string;
+  template_name: string | null;
+  recipient_phone: string;
+  provider_message_id: string | null;
+  status: string;
+  deep_link: string | null;
+  payload: Record<string, unknown>;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SendNotificationPayload {
+  template_name: string;
+  params: Record<string, string | number>;
+  language_code?: string;
+  query_params?: Record<string, string>;
+  dry_run?: boolean;
+}
+
+export interface SendNotificationResponse {
+  log: NotificationLogEntry;
+  preview_text: string;
+  dry_run: boolean;
+}
+
+export interface UpcomingSlotSummary {
+  slot_type: string;
+  label: string;
+  local_time: string;
+  enabled: boolean;
+  template_name: string;
+}
+
+export interface ScheduledNotificationJob {
+  user_id: string;
+  template_name: string;
+  slot_key: string;
+  recipient_phone: string;
+  params: Record<string, string>;
+  reason: string;
+}
+
+export interface SchedulePreviewResponse {
+  user_id: string;
+  timezone: string;
+  local_time: string;
+  in_quiet_hours: boolean;
+  whatsapp_opt_in: boolean;
+  due_jobs: ScheduledNotificationJob[];
+  upcoming_slots: UpcomingSlotSummary[];
+}
+
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"
 ).replace(/\/+$/, "");
@@ -612,6 +704,66 @@ export async function getWorkoutHistory(
 ): Promise<WorkoutLogRecord[]> {
   return requestJson<WorkoutLogRecord[]>(
     `/api/v1/tracking/${encodeURIComponent(userId)}/workouts?days=${days}`,
+    { method: "GET" },
+  );
+}
+
+export async function getNotificationTemplates(): Promise<WhatsAppTemplateDefinition[]> {
+  return requestJson<WhatsAppTemplateDefinition[]>("/api/v1/notifications/templates", {
+    method: "GET",
+  });
+}
+
+export async function getNotificationPreferences(
+  userId: string,
+): Promise<NotificationPreferences> {
+  return requestJson<NotificationPreferences>(
+    `/api/v1/notifications/${encodeURIComponent(userId)}/preferences`,
+    { method: "GET" },
+  );
+}
+
+export async function updateNotificationPreferences(
+  userId: string,
+  payload: NotificationPreferencesUpdate,
+): Promise<NotificationPreferences> {
+  return requestJson<NotificationPreferences>(
+    `/api/v1/notifications/${encodeURIComponent(userId)}/preferences`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function sendUserNotification(
+  userId: string,
+  payload: SendNotificationPayload,
+): Promise<SendNotificationResponse> {
+  return requestJson<SendNotificationResponse>(
+    `/api/v1/notifications/${encodeURIComponent(userId)}/send`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function getNotificationLogs(
+  userId: string,
+  limit = 30,
+): Promise<NotificationLogEntry[]> {
+  return requestJson<NotificationLogEntry[]>(
+    `/api/v1/notifications/${encodeURIComponent(userId)}/logs?limit=${limit}`,
+    { method: "GET" },
+  );
+}
+
+export async function getNotificationSchedulePreview(
+  userId: string,
+): Promise<SchedulePreviewResponse> {
+  return requestJson<SchedulePreviewResponse>(
+    `/api/v1/notifications/${encodeURIComponent(userId)}/schedule-preview`,
     { method: "GET" },
   );
 }

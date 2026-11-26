@@ -1131,3 +1131,42 @@ class NotificationRepository:
             stmt = stmt.limit(limit)
         rows = session.scalars(stmt).all()
         return [_to_notification_log_record(row) for row in rows]
+
+    @staticmethod
+    def list_opted_in_preferences(session: Session) -> list[NotificationPreferenceRecord]:
+        """List preferences for all users who opted in to WhatsApp notifications."""
+        stmt = (
+            select(NotificationPreferenceRow)
+            .where(
+                NotificationPreferenceRow.whatsapp_opt_in.is_(True),
+                NotificationPreferenceRow.whatsapp_phone.is_not(None),
+            )
+            .order_by(NotificationPreferenceRow.user_id.asc())
+        )
+        rows = session.scalars(stmt).all()
+        return [_to_notification_preference_record(row) for row in rows if row.whatsapp_phone]
+
+    @staticmethod
+    def has_sent_slot(
+        session: Session,
+        user_id: str,
+        slot_key: str,
+        *,
+        lookback_days: int = 8,
+        now: datetime | None = None,
+    ) -> bool:
+        """Check whether an outbound notification for `slot_key` was already dispatched."""
+        reference = _ensure_utc(now) if now is not None else datetime.now(UTC)
+        cutoff = reference - timedelta(days=lookback_days)
+
+        stmt = select(NotificationLogRow).where(
+            NotificationLogRow.user_id == user_id,
+            NotificationLogRow.direction == "outbound",
+            NotificationLogRow.status.in_(("sent", "delivered", "read", "dry_run")),
+        )
+        rows = session.scalars(stmt).all()
+        return any(
+            _ensure_utc(row.created_at) >= cutoff
+            and (row.payload or {}).get("slot_key") == slot_key
+            for row in rows
+        )

@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     whatsapp_app_secret: str = ""
     whatsapp_api_version: str = "v22.0"
     pwa_base_url: str = "http://localhost:3000"
+    scheduler_secret: str = ""
 
     model_config = SettingsConfigDict(
         env_file=(str(ROOT_ENV_FILE), ".env"),

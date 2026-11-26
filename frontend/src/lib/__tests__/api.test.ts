@@ -7,6 +7,10 @@ import {
   generateWeeklyMealPlan,
   getChatHistory,
   getDashboard,
+  getNotificationLogs,
+  getNotificationPreferences,
+  getNotificationSchedulePreview,
+  getNotificationTemplates,
   getProfile,
   getUserMemories,
   getUserPatterns,
@@ -19,7 +23,9 @@ import {
   logWorkout,
   searchFoods,
   sendChatMessage,
+  sendUserNotification,
   swapMealPlanSlot,
+  updateNotificationPreferences,
   type ProfileUpsertRequest,
 } from "@/lib/api";
 import { deriveLocalUserId, isSupabaseConfigured } from "@/lib/auth";
@@ -354,6 +360,106 @@ describe("typed FastAPI client", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
       "http://127.0.0.1:8000/api/v1/tracking/u1/workouts?days=30",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("calls WhatsApp notification templates, preferences, preview, send, and logs endpoints", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ user_id: "u1", whatsapp_opt_in: false, whatsapp_phone: null }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            user_id: "u1",
+            whatsapp_opt_in: true,
+            whatsapp_phone: "923001234567",
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            user_id: "u1",
+            timezone: "Asia/Karachi",
+            local_time: "2026-11-26 13:00",
+            in_quiet_hours: false,
+            whatsapp_opt_in: true,
+            due_jobs: [],
+            upcoming_slots: [],
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            log: { id: "log-1", status: "dry_run" },
+            preview_text: "Preview",
+            dry_run: true,
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getNotificationTemplates();
+    const prefs = await getNotificationPreferences("u1");
+    const updated = await updateNotificationPreferences("u1", {
+      whatsapp_opt_in: true,
+      whatsapp_phone: "+92 300 1234567",
+      meal_reminders: true,
+      water_reminders: true,
+      workout_reminders: true,
+      night_summary: true,
+      weekly_report: true,
+      quiet_hours_start: "22:30",
+      quiet_hours_end: "07:00",
+    });
+    const schedule = await getNotificationSchedulePreview("u1");
+    const sent = await sendUserNotification("u1", {
+      template_name: "fitsoul_meal_reminder",
+      params: { user_name: "Aymen" },
+      dry_run: true,
+    });
+    const logs = await getNotificationLogs("u1", 30);
+
+    expect(prefs.whatsapp_opt_in).toBe(false);
+    expect(updated.whatsapp_phone).toBe("923001234567");
+    expect(schedule.timezone).toBe("Asia/Karachi");
+    expect(sent.dry_run).toBe(true);
+    expect(logs).toEqual([]);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "http://127.0.0.1:8000/api/v1/notifications/templates",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "http://127.0.0.1:8000/api/v1/notifications/u1/preferences",
+      expect.objectContaining({ method: "PUT" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "http://127.0.0.1:8000/api/v1/notifications/u1/schedule-preview",
+      expect.objectContaining({ method: "GET" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      5,
+      "http://127.0.0.1:8000/api/v1/notifications/u1/send",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      6,
+      "http://127.0.0.1:8000/api/v1/notifications/u1/logs?limit=30",
       expect.objectContaining({ method: "GET" }),
     );
   });
