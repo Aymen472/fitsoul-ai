@@ -1,5 +1,6 @@
 """Repository layer for profiles, meal logs, messages, memories, mood logs, and foods."""
 
+import re
 from datetime import UTC, date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
@@ -15,6 +16,8 @@ from app.db.tables import (
     MealLogRow,
     MessageRow,
     MoodLogRow,
+    NotificationLogRow,
+    NotificationPreferenceRow,
     NutritionTargetRow,
     ProfileRow,
     UserMemoryRow,
@@ -35,6 +38,31 @@ from app.models import (
 
 if TYPE_CHECKING:
     from app.ai.photo_scanner import PhotoScanSummary
+
+
+_HHMM_RE = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
+
+
+def normalize_phone_digits(phone: str) -> str:
+    """Normalize an international or Pakistani phone number into digits without '+'."""
+    cleaned = re.sub(r"[\s\-()]+", "", phone.strip())
+    if cleaned.startswith("+"):
+        cleaned = cleaned[1:]
+    if not cleaned or not cleaned.isdigit():
+        raise ValueError("Phone number must contain digits only")
+    if len(cleaned) == 11 and cleaned.startswith("03"):
+        cleaned = f"92{cleaned[1:]}"
+    if not (10 <= len(cleaned) <= 15):
+        raise ValueError("Phone number must be between 10 and 15 digits")
+    return cleaned
+
+
+def _validate_hhmm(value: str) -> str:
+    """Validate a 24-hour HH:MM string such as '22:30' or '07:00'."""
+    cleaned = value.strip()
+    if not _HHMM_RE.match(cleaned):
+        raise ValueError("Time must be in 24-hour HH:MM format (e.g., '22:30')")
+    return cleaned
 
 
 def _ensure_utc(dt: datetime) -> datetime:
@@ -211,6 +239,33 @@ class ProfileRepository:
             )
         session.commit()
         return len(foods)
+
+    @staticmethod
+    def get_profile_by_phone(session: Session, phone: str) -> ProfileRecord | None:
+        """Resolve a user profile from WhatsApp preferences or account phone number."""
+        try:
+            normalized = normalize_phone_digits(phone)
+        except ValueError:
+            return None
+
+        pref_row = session.scalar(
+            select(NotificationPreferenceRow).where(
+                NotificationPreferenceRow.whatsapp_phone == normalized
+            )
+        )
+        if pref_row is not None:
+            return ProfileRepository.get_profile(session, pref_row.user_id)
+
+        users = session.scalars(select(UserRow).where(UserRow.phone.is_not(None))).all()
+        for user in users:
+            if not user.phone:
+                continue
+            try:
+                if normalize_phone_digits(user.phone) == normalized:
+                    return ProfileRepository.get_profile(session, user.id)
+            except ValueError:
+                continue
+        return None
 
 
 class MealLogRecord(BaseModel):
@@ -807,3 +862,272 @@ class WorkoutRepository:
         if limit > 0 and len(filtered) > limit:
             return filtered[-limit:]
         return filtered
+
+
+class NotificationPreferenceRecord(BaseModel):
+    """Persisted WhatsApp notification preferences for a user."""
+
+    user_id: str
+    whatsapp_opt_in: bool
+    whatsapp_phone: str | None = None
+    meal_reminders: bool = True
+    water_reminders: bool = True
+    workout_reminders: bool = True
+    night_summary: bool = True
+    weekly_report: bool = True
+    quiet_hours_start: str = "22:30"
+    quiet_hours_end: str = "07:00"
+    updated_at: datetime | None = None
+
+
+class NotificationLogRecord(BaseModel):
+    """Persisted outbound template notification or inbound webhook event."""
+
+    id: str
+    user_id: str | None = None
+    channel: str
+    direction: str
+    template_name: str | None = None
+    recipient_phone: str
+    provider_message_id: str | None = None
+    status: str
+    deep_link: str | None = None
+    payload: dict[str, Any]
+    error_message: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+def _to_notification_preference_record(
+    row: NotificationPreferenceRow,
+) -> NotificationPreferenceRecord:
+    return NotificationPreferenceRecord(
+        user_id=row.user_id,
+        whatsapp_opt_in=row.whatsapp_opt_in,
+        whatsapp_phone=row.whatsapp_phone,
+        meal_reminders=row.meal_reminders,
+        water_reminders=row.water_reminders,
+        workout_reminders=row.workout_reminders,
+        night_summary=row.night_summary,
+        weekly_report=row.weekly_report,
+        quiet_hours_start=row.quiet_hours_start,
+        quiet_hours_end=row.quiet_hours_end,
+        updated_at=_ensure_utc(row.updated_at),
+    )
+
+
+def _to_notification_log_record(row: NotificationLogRow) -> NotificationLogRecord:
+    return NotificationLogRecord(
+        id=row.id,
+        user_id=row.user_id,
+        channel=row.channel,
+        direction=row.direction,
+        template_name=row.template_name,
+        recipient_phone=row.recipient_phone,
+        provider_message_id=row.provider_message_id,
+        status=row.status,
+        deep_link=row.deep_link,
+        payload=dict(row.payload or {}),
+        error_message=row.error_message,
+        created_at=_ensure_utc(row.created_at),
+        updated_at=_ensure_utc(row.updated_at),
+    )
+
+
+class NotificationRepository:
+    """Data-access operations for WhatsApp preferences, opt-in state, and delivery logs."""
+
+    @staticmethod
+    def get_preferences(session: Session, user_id: str) -> NotificationPreferenceRecord | None:
+        """Fetch saved notification preferences for a user, if any exist."""
+        row = session.get(NotificationPreferenceRow, user_id)
+        if row is None:
+            return None
+        return _to_notification_preference_record(row)
+
+    @staticmethod
+    def upsert_preferences(
+        session: Session,
+        user_id: str,
+        *,
+        whatsapp_opt_in: bool,
+        whatsapp_phone: str | None = None,
+        meal_reminders: bool = True,
+        water_reminders: bool = True,
+        workout_reminders: bool = True,
+        night_summary: bool = True,
+        weekly_report: bool = True,
+        quiet_hours_start: str = "22:30",
+        quiet_hours_end: str = "07:00",
+    ) -> NotificationPreferenceRecord:
+        """Create or update WhatsApp opt-in settings, phone number, and quiet hours."""
+        quiet_start = _validate_hhmm(quiet_hours_start)
+        quiet_end = _validate_hhmm(quiet_hours_end)
+
+        normalized_phone: str | None = None
+        if whatsapp_phone is not None and whatsapp_phone.strip():
+            normalized_phone = normalize_phone_digits(whatsapp_phone)
+
+        if whatsapp_opt_in and normalized_phone is None:
+            raise ValueError("whatsapp_phone is required when whatsapp_opt_in is enabled")
+
+        user_row = session.get(UserRow, user_id)
+        if user_row is not None and user_row.phone is None and normalized_phone is not None:
+            conflict = session.scalar(
+                select(UserRow).where(UserRow.phone == normalized_phone, UserRow.id != user_id)
+            )
+            if conflict is None:
+                user_row.phone = normalized_phone
+
+        now = datetime.now(UTC)
+        row = session.get(NotificationPreferenceRow, user_id)
+        if row is None:
+            row = NotificationPreferenceRow(user_id=user_id)
+        row.whatsapp_opt_in = whatsapp_opt_in
+        row.whatsapp_phone = normalized_phone
+        row.meal_reminders = meal_reminders
+        row.water_reminders = water_reminders
+        row.workout_reminders = workout_reminders
+        row.night_summary = night_summary
+        row.weekly_report = weekly_report
+        row.quiet_hours_start = quiet_start
+        row.quiet_hours_end = quiet_end
+        row.updated_at = now
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_notification_preference_record(row)
+
+    @staticmethod
+    def set_opt_in_by_phone(
+        session: Session,
+        phone: str,
+        opt_in: bool,
+    ) -> NotificationPreferenceRecord | None:
+        """Toggle WhatsApp opt-in state by phone number (used for STOP/START keywords)."""
+        try:
+            normalized = normalize_phone_digits(phone)
+        except ValueError:
+            return None
+
+        now = datetime.now(UTC)
+        pref_row = session.scalar(
+            select(NotificationPreferenceRow).where(
+                NotificationPreferenceRow.whatsapp_phone == normalized
+            )
+        )
+        if pref_row is not None:
+            pref_row.whatsapp_opt_in = opt_in
+            pref_row.updated_at = now
+            session.commit()
+            session.refresh(pref_row)
+            return _to_notification_preference_record(pref_row)
+
+        profile = ProfileRepository.get_profile_by_phone(session, normalized)
+        if profile is None:
+            return None
+
+        pref_row = session.get(NotificationPreferenceRow, profile.user_id)
+        if pref_row is None:
+            pref_row = NotificationPreferenceRow(
+                user_id=profile.user_id,
+                whatsapp_opt_in=opt_in,
+                whatsapp_phone=normalized,
+                updated_at=now,
+            )
+            session.add(pref_row)
+        else:
+            pref_row.whatsapp_opt_in = opt_in
+            pref_row.whatsapp_phone = normalized
+            pref_row.updated_at = now
+        session.commit()
+        session.refresh(pref_row)
+        return _to_notification_preference_record(pref_row)
+
+    @staticmethod
+    def log_notification(
+        session: Session,
+        *,
+        recipient_phone: str,
+        direction: str,
+        status: str,
+        user_id: str | None = None,
+        channel: str = "whatsapp",
+        template_name: str | None = None,
+        provider_message_id: str | None = None,
+        deep_link: str | None = None,
+        payload: dict[str, Any] | None = None,
+        error_message: str | None = None,
+    ) -> NotificationLogRecord:
+        """Persist an outbound notification attempt or inbound WhatsApp message event."""
+        if direction not in {"outbound", "inbound"}:
+            raise ValueError("direction must be 'outbound' or 'inbound'")
+
+        now = datetime.now(UTC)
+        row = NotificationLogRow(
+            id=str(uuid4()),
+            user_id=user_id,
+            channel=channel.strip() or "whatsapp",
+            direction=direction,
+            template_name=template_name,
+            recipient_phone=recipient_phone.strip(),
+            provider_message_id=provider_message_id,
+            status=status.strip() or "queued",
+            deep_link=deep_link,
+            payload=dict(payload or {}),
+            error_message=error_message,
+            created_at=now,
+            updated_at=now,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return _to_notification_log_record(row)
+
+    @staticmethod
+    def update_delivery_status(
+        session: Session,
+        provider_message_id: str,
+        status: str,
+        *,
+        error_message: str | None = None,
+    ) -> NotificationLogRecord | None:
+        """Update delivery status (sent/delivered/read/failed) from Meta webhook callbacks."""
+        msg_id = provider_message_id.strip()
+        if not msg_id:
+            return None
+
+        stmt = (
+            select(NotificationLogRow)
+            .where(NotificationLogRow.provider_message_id == msg_id)
+            .order_by(NotificationLogRow.created_at.desc())
+        )
+        row = session.scalars(stmt).first()
+        if row is None:
+            return None
+
+        row.status = status.strip() or row.status
+        row.updated_at = datetime.now(UTC)
+        if error_message is not None:
+            row.error_message = error_message
+        session.commit()
+        session.refresh(row)
+        return _to_notification_log_record(row)
+
+    @staticmethod
+    def list_user_notifications(
+        session: Session,
+        user_id: str,
+        *,
+        limit: int = 30,
+    ) -> list[NotificationLogRecord]:
+        """List recent notifications for a user ordered newest first."""
+        stmt = (
+            select(NotificationLogRow)
+            .where(NotificationLogRow.user_id == user_id)
+            .order_by(NotificationLogRow.created_at.desc(), NotificationLogRow.id.desc())
+        )
+        if limit > 0:
+            stmt = stmt.limit(limit)
+        rows = session.scalars(stmt).all()
+        return [_to_notification_log_record(row) for row in rows]

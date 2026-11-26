@@ -243,3 +243,49 @@ class SubscriptionRow(Base):
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now)
+
+
+class NotificationPreferenceRow(Base):
+    """Per-user WhatsApp opt-in, phone number, reminder toggles, and quiet hours."""
+
+    __tablename__ = "notification_preferences"
+
+    user_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    whatsapp_opt_in: Mapped[bool] = mapped_column(Boolean, default=False)
+    whatsapp_phone: Mapped[str | None] = mapped_column(String(32), index=True, nullable=True)
+    meal_reminders: Mapped[bool] = mapped_column(Boolean, default=True)
+    water_reminders: Mapped[bool] = mapped_column(Boolean, default=True)
+    workout_reminders: Mapped[bool] = mapped_column(Boolean, default=True)
+    night_summary: Mapped[bool] = mapped_column(Boolean, default=True)
+    weekly_report: Mapped[bool] = mapped_column(Boolean, default=True)
+    quiet_hours_start: Mapped[str] = mapped_column(String(8), default="22:30")
+    quiet_hours_end: Mapped[str] = mapped_column(String(8), default="07:00")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utc_now, onupdate=_utc_now
+    )
+
+
+class NotificationLogRow(Base):
+    """Outbound template notifications, webhook status updates, and inbound replies."""
+
+    __tablename__ = "notification_logs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=_new_uuid)
+    user_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=True
+    )
+    channel: Mapped[str] = mapped_column(String(24), default="whatsapp")
+    direction: Mapped[str] = mapped_column(String(16), default="outbound")
+    template_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    recipient_phone: Mapped[str] = mapped_column(String(32))
+    provider_message_id: Mapped[str | None] = mapped_column(String(128), index=True, nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default="queued")
+    deep_link: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utc_now, onupdate=_utc_now
+    )
